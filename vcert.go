@@ -161,8 +161,8 @@ func buildGenerateRequest(v *GenerateAndStoreCommand) (*certificate.Request, err
 	if v.State != "" {
 		subject.Province = []string{v.State}
 	}
-	if v.State != "" {
-		subject.Locality = []string{v.State}
+	if v.Locality != "" {
+		subject.Locality = []string{v.Locality}
 	}
 	if len(v.SANEmail) > 0 {
 		r.EmailAddresses = v.SANEmail
