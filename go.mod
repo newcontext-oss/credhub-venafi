@@ -1,4 +1,4 @@
-module github.com/newcontext-oss/cv
+module github.com/newcontext-oss/credhub-venafi
 
 go 1.12
 
