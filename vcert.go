@@ -16,6 +16,7 @@ package main
 
 import (
 	"crypto/x509/pkix"
+	"encoding/pem"
 	"fmt"
 	"time"
 
@@ -137,7 +138,7 @@ func (v *VcertProxy) generate(args *GenerateAndStoreCommand) (*certificate.PEMCo
 		return nil, err
 	}
 
-	requestID, err := sendCertificateRequest(v.client, req)
+	requestID, privateKey, err := sendCertificateRequest(v.client, req)
 
 	pickupReq := &certificate.Request{
 		PickupID: requestID,
@@ -148,6 +149,7 @@ func (v *VcertProxy) generate(args *GenerateAndStoreCommand) (*certificate.PEMCo
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve certificate using requestId %s: %s", requestID, err)
 	}
+	pcc.PrivateKey = privateKey
 	return pcc, nil
 }
 
@@ -191,16 +193,23 @@ func buildGenerateRequest(v *GenerateAndStoreCommand) (*certificate.Request, err
 	return r, nil
 }
 
-func sendCertificateRequest(c endpoint.Connector, enrollReq *certificate.Request) (requestID string, err error) {
+func sendCertificateRequest(c endpoint.Connector, enrollReq *certificate.Request) (requestID string, privateKey string, err error) {
 	err = c.GenerateRequest(nil, enrollReq)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	requestID, err = c.RequestCertificate(enrollReq)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
+
+	pemBlock, err := certificate.GetPrivateKeyPEMBock(enrollReq.PrivateKey)
+	if err != nil {
+		return "", "", err
+	}
+	privateKey = string(pem.EncodeToMemory(pemBlock))
+
 	verbose("Successfully submitted certificate request. Will pickup certificate by ID %s", requestID)
-	return requestID, nil
+	return requestID, privateKey, nil
 }
