@@ -1,19 +1,23 @@
-# CV
-A common tool to manage certificates in Venafi and CredHub
+# CredHub-Venafi
 
-CV is cli tool that helps manage certificates located in Venafi TPP and Pivotal Cloud Foundry CredHub
+Commonly manage certificates in both Venafi and CredHub.
 
-### CV Commands
+[![New Context](https://img.shields.io/badge/awesome-for%20hire-orange?style=for-the-badge)](http://www.newcontext.com)
+
+CredHub-Venafi is a CLI tool (`cv`) that helps manage certificates located in Venafi TPP and Pivotal Cloud Foundry CredHub.
+
+### Commands
 * login
 * create
 * list
 * delete
 
-### CV Login
-Logs into CredHub only.
-TPP authentication happens with each command.</li>
+### `cv login`
+* Logs into CredHub only.
+* TPP authentication happens with each command.
 
 ### CredHub uses Cloud Foundry UAA
+
 CV logs in the User Account and Authentication (UAA) Server by first contacting the CredHub Server. It retrieves the UAA path. Then, it contacts the UAA server with the credentials to get an access token.  That token is subsequently used to access the CredHub server.
 
 ### Config File
@@ -55,7 +59,7 @@ After logging in to CredHub there will be a file at `$HOME/.cv/json.config` that
 }
 ```
 
-### CV create example
+### `cv create` example
 Create a certificate on the Venafi side and upload to CredHub
 
 ```
@@ -107,7 +111,7 @@ Usage of cv:
 The policy folder is configured with the `vcert_zone` key.
 `vcert_zone: \Certificates`
 
-### CV List examples
+### `cv list` examples
 Compare by thumbprint
 
 ```
@@ -157,3 +161,11 @@ Compares path from Venafi side with path from the CredHub side. There are comman
 
 ### CV Delete
 Deletes a certificate on both systems by first looking it up from the CredHub side by name, calculating the thumbprint and deleting from the Venafi side.
+
+# Powered by New Context
+
+[![New Context Logo](https://newcontext.com/wp-content/uploads/2018/02/New-Context-logo2.png)](http://www.newcontext.com)
+
+CredHub-Venafi is maintained and funded by New Context, which provides "security first" automation to mission critical infrastructure.
+We were doing DevSecOps before it became a buzzword, you can [hire us](https://newcontext.com/contact-us/) to
+improve your time-to-market, reduce risk, and boost your security/compliance posture.
