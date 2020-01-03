@@ -137,15 +137,24 @@ func (v *VcertProxy) generate(args *GenerateAndStoreCommand) (*certificate.PEMCo
 	if err != nil {
 		return nil, err
 	}
+	req.KeyPassword = "!1Asomethinglong"
+
+	req.CsrOrigin = certificate.ServiceGeneratedCSR
 
 	requestID, privateKey, err := sendCertificateRequest(v.client, req)
+	req.PickupID = "\\VED\\Policy\\Certificates\\Demo\\mycertfromvenafi24q"
+	req.Timeout = 180 * time.Second
+	fmt.Println("requestID", requestID)
 
-	pickupReq := &certificate.Request{
-		PickupID: requestID,
-		Timeout:  180 * time.Second,
-	}
+	// pickupReq := &certificate.Request{
+	// 	PickupID: requestID,
+	// 	Timeout:  180 * time.Second,
+	// }
 
-	pcc, err := v.client.RetrieveCertificate(pickupReq)
+	// time.Sleep(5 * time.Second)
+
+	// pcc, err := v.client.RetrieveCertificate(pickupReq)
+	pcc, err := v.client.RetrieveCertificate(req)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve certificate using requestId %s: %s", requestID, err)
 	}
