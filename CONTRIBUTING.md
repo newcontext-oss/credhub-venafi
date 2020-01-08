@@ -55,7 +55,7 @@ The following command will execute the unit tests.
 > Executing unit tests with Go's testing package
 
 ```sh
-go test
+go test -v
 ```
 
 The json files under [testdata](testdata) contain supporting json files for testing.
