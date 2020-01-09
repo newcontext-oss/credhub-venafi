@@ -73,7 +73,7 @@ func parseCommand() (Command, error) {
 	return v, nil
 }
 
-// ListCommand contains the information required to contruct a call to list certificates
+// ListCommand contains the information required to construct a call to list certificates
 type ListCommand struct {
 	ByThumbprint  bool
 	ByCommonName  bool
@@ -161,7 +161,7 @@ func (v *ListCommand) execute() error {
 	return err
 }
 
-// GenerateAndStoreCommand contains the information needed to contruct a call to generate and store a cert
+// GenerateAndStoreCommand contains the information needed to construct a call to generate and store a cert
 type GenerateAndStoreCommand struct {
 	Name string
 
