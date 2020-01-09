@@ -24,20 +24,29 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+// CVLogFilename is the name of the application log file
 const CVLogFilename string = "cv.log"
 
+// VERBOSE contains the int32 value for verbose logging
 var VERBOSE int32 = 4
+
+// INFO contains the int32 value for info-level logging
 var INFO int32 = 3
+
+// STATUS contains the int32 value for status-level logging
 var STATUS int32 = 2
+
+// ERROR contains the int32 value for error-level logging
 var ERROR int32 = 1
 
 var logLevel int32 = STATUS
 
+// YAMLConfig contains the configuration values and yaml tags for the config file
 type YAMLConfig struct {
 	VcertUsername   string `yaml:"vcert_username"`
 	VcertPassword   string `yaml:"vcert_password"`
 	VcertZone       string `yaml:"vcert_zone"`
-	VcertBaseUrl    string `yaml:"vcert_base_url"`
+	VcertBaseURL    string `yaml:"vcert_base_url"`
 	ConnectorType   string `yaml:"connector_type"`
 	ClientID        string `yaml:"credhub_client_id"`
 	ClientSecret    string `yaml:"credhub_client_secret"`
