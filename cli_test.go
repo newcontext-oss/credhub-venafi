@@ -241,7 +241,7 @@ func TestConfigReadWrite(t *testing.T) {
 
 	cl := ConfigLoader{userHomeDir: dir, cvConfigDir: ".cv", configFilename: "config.json"}
 	cl.ensureDirExists()
-	cl.writeConfig(&CVConfig{AccessToken: "accesstoken", RefreshToken: "refreshtoken", CredhubBaseUrl: "http://url"})
+	cl.writeConfig(&CVConfig{AccessToken: "accesstoken", RefreshToken: "refreshtoken", CredhubBaseURL: "http://url"})
 	conf, err := cl.readConfig()
 	if err != nil {
 		t.Fatal(err)
@@ -253,8 +253,8 @@ func TestConfigReadWrite(t *testing.T) {
 	if conf.RefreshToken != "refreshtoken" {
 		t.Fatal("refreshtoken not equal")
 	}
-	if conf.CredhubBaseUrl != "http://url" {
-		t.Fatal("baseUrl not equal")
+	if conf.CredhubBaseURL != "http://url" {
+		t.Fatal("baseURL not equal")
 	}
 	fmt.Printf("conf %+v", conf)
 }
@@ -275,8 +275,8 @@ func TestYAML2(t *testing.T) {
 	if alt.VcertZone != "3" {
 		t.Fatal("VcertZone not equal")
 	}
-	if alt.VcertBaseUrl != "4" {
-		t.Fatal("VcertBaseUrl not equal")
+	if alt.VcertBaseURL != "4" {
+		t.Fatal("VcertBaseURL not equal")
 	}
 	if alt.ConnectorType != "5" {
 		t.Fatal("ConnectorType not equal")

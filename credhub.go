@@ -33,6 +33,7 @@ import (
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials/values"
 )
 
+// ConfigLoader has configuration location info and methods to load the config
 type ConfigLoader struct {
 	userHomeDir    string
 	cvConfigDir    string
@@ -85,14 +86,16 @@ func (c *ConfigLoader) readConfig() (*CVConfig, error) {
 	return &cvConfig, nil
 }
 
+// CVConfig contains app config info and yaml tags
 type CVConfig struct {
 	AccessToken       string `json:"access_token"`
 	RefreshToken      string `json:"refresh_token"`
-	CredhubBaseUrl    string `json:"credhub_url"`
-	AuthUrl           string `json:"auth_url"`
+	CredhubBaseURL    string `json:"credhub_url"`
+	AuthURL           string `json:"auth_url"`
 	SkipTLSValidation bool   `json:"skip_tls_validation"`
 }
 
+// ICredhubProxy defines the interface for the proxy to communicate with Credhub
 type ICredhubProxy interface {
 	generateCertificate(name string, parameters generate.Certificate, overwrite credhub.Mode) (credentials.Certificate, error)
 	putCertificate(certName string, ca string, certificate string, privateKey string) error
@@ -101,15 +104,16 @@ type ICredhubProxy interface {
 	getCertificate(name string) (credentials.Certificate, error)
 }
 
+// CredhubProxy contains the config information for the Credhub request proxy
 type CredhubProxy struct {
-	baseUrl           string
+	baseURL           string
 	username          string
 	password          string
-	clientId          string
+	clientID          string
 	clientSecret      string
 	accessToken       string
 	refreshToken      string
-	authUrl           string
+	authURL           string
 	client            *credhub.CredHub
 	configPath        string
 	skipTLSValidation bool
@@ -198,10 +202,10 @@ func (cp *CredhubProxy) writeConfig(configPath string, config *CVConfig) error {
 
 func (cp *CredhubProxy) authExisting() error {
 	var err error
-	cp.client, err = credhub.New(cp.baseUrl,
+	cp.client, err = credhub.New(cp.baseURL,
 		credhub.SkipTLSValidation(cp.skipTLSValidation),
 		credhub.Auth(auth.Uaa(
-			cp.clientId,
+			cp.clientID,
 			cp.clientSecret,
 			cp.username,
 			cp.password,
@@ -209,40 +213,40 @@ func (cp *CredhubProxy) authExisting() error {
 			cp.refreshToken,
 			false,
 		)),
-		credhub.AuthURL(cp.authUrl),
+		credhub.AuthURL(cp.authURL),
 	)
 
 	return err
 }
 
 func (cp *CredhubProxy) auth() error {
-	ch, err := credhub.New(cp.baseUrl,
+	ch, err := credhub.New(cp.baseURL,
 		credhub.SkipTLSValidation(cp.skipTLSValidation),
-		credhub.Auth(auth.UaaPassword(cp.clientId, cp.clientSecret, cp.username, cp.password)))
+		credhub.Auth(auth.UaaPassword(cp.clientID, cp.clientSecret, cp.username, cp.password)))
 	if err != nil {
 		return err
 	}
-	authUrl, err := ch.AuthURL()
+	authURL, err := ch.AuthURL()
 	if err != nil {
 		return err
 	}
 
 	uaaClient := uaa.Client{
-		AuthURL: authUrl,
+		AuthURL: authURL,
 		Client:  ch.Client(),
 	}
 
-	if cp.clientId != "" {
-		cp.accessToken, err = uaaClient.ClientCredentialGrant(cp.clientId, cp.clientSecret)
+	if cp.clientID != "" {
+		cp.accessToken, err = uaaClient.ClientCredentialGrant(cp.clientID, cp.clientSecret)
 		if err != nil {
 			return err
 		}
 	} else {
-		if cp.clientId == "" {
+		if cp.clientID == "" {
 			// default value to be used
-			cp.clientId = "credhub_cli"
+			cp.clientID = "credhub_cli"
 		}
-		cp.accessToken, cp.refreshToken, err = uaaClient.PasswordGrant(cp.clientId, cp.clientSecret, cp.username, cp.password)
+		cp.accessToken, cp.refreshToken, err = uaaClient.PasswordGrant(cp.clientID, cp.clientSecret, cp.username, cp.password)
 		if err != nil {
 			return err
 		}
@@ -266,7 +270,7 @@ func (cp *CredhubProxy) auth() error {
 	// write out the config file with the access token and refresh
 	// write out as json for now
 	// our config will just be a struct for now
-	cvConfig := CVConfig{AccessToken: cp.accessToken, RefreshToken: cp.refreshToken, CredhubBaseUrl: cp.baseUrl, AuthUrl: authUrl, SkipTLSValidation: cp.skipTLSValidation}
+	cvConfig := CVConfig{AccessToken: cp.accessToken, RefreshToken: cp.refreshToken, CredhubBaseURL: cp.baseURL, AuthURL: authURL, SkipTLSValidation: cp.skipTLSValidation}
 
 	b, err := json.Marshal(&cvConfig)
 	if err != nil {
@@ -278,10 +282,10 @@ func (cp *CredhubProxy) auth() error {
 		return err
 	}
 
-	cp.client, err = credhub.New(cp.baseUrl,
+	cp.client, err = credhub.New(cp.baseURL,
 		credhub.SkipTLSValidation(cp.skipTLSValidation),
 		credhub.Auth(auth.Uaa(
-			cp.clientId,
+			cp.clientID,
 			cp.clientSecret,
 			cp.username,
 			cp.password,

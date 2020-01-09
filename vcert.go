@@ -25,6 +25,7 @@ import (
 	"github.com/Venafi/vcert/pkg/endpoint"
 )
 
+// IVcertProxy defines the interface for proxies that manage requests to vcert
 type IVcertProxy interface {
 	putCertificate(certName string, cert string, privateKey string) error
 	list(vlimit int, zone string) ([]certificate.CertificateInfo, error)
@@ -34,12 +35,13 @@ type IVcertProxy interface {
 	generate(args *GenerateAndStoreCommand) (*certificate.PEMCollection, error)
 }
 
+// VcertProxy contains the necessary config information for a vcert proxy
 type VcertProxy struct {
 	username      string
 	password      string
 	zone          string
 	client        endpoint.Connector
-	baseUrl       string
+	baseURL       string
 	connectorType string
 }
 
@@ -101,7 +103,7 @@ func (v *VcertProxy) login() error {
 	}
 	conf := vcert.Config{
 		Credentials:   &auth,
-		BaseUrl:       v.baseUrl,
+		BaseUrl:       v.baseURL,
 		Zone:          v.zone,
 		ConnectorType: connectorType,
 	}

@@ -106,7 +106,7 @@ func TestJsonSerialize(t *testing.T) {
 	fmt.Println("s", string(bytes))
 }
 
-func aTestJsonDeserialize(t *testing.T) {
+func aTestJSONDeserialize(t *testing.T) {
 	data := []CertCompareData{}
 
 	dat, err := ioutil.ReadFile("/tmp/dat1")

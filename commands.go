@@ -27,6 +27,7 @@ import (
 	"github.com/Venafi/vcert/pkg/certificate"
 )
 
+// Command represents a command line instruction from the user
 type Command interface {
 	validateFlags() error
 	prepFlags()
@@ -72,6 +73,7 @@ func parseCommand() (Command, error) {
 	return v, nil
 }
 
+// ListCommand contains the information required to construct a call to list certificates
 type ListCommand struct {
 	ByThumbprint  bool
 	ByCommonName  bool
@@ -124,12 +126,12 @@ func (v *ListCommand) execute() error {
 	}
 
 	cp := &CredhubProxy{
-		baseUrl:           config.CredhubBaseUrl,
+		baseURL:           config.CredhubBaseURL,
 		accessToken:       config.AccessToken,
 		refreshToken:      config.RefreshToken,
-		authUrl:           config.AuthUrl,
+		authURL:           config.AuthURL,
 		skipTLSValidation: config.SkipTLSValidation,
-		clientId:          configYAML.ClientID,
+		clientID:          configYAML.ClientID,
 		clientSecret:      configYAML.ClientSecret,
 		configPath:        ".cv",
 	}
@@ -141,7 +143,7 @@ func (v *ListCommand) execute() error {
 			username:      configYAML.VcertUsername,
 			password:      configYAML.VcertPassword,
 			zone:          configYAML.VcertZone,
-			baseUrl:       configYAML.VcertBaseUrl,
+			baseURL:       configYAML.VcertBaseURL,
 			connectorType: configYAML.ConnectorType,
 		},
 	}
@@ -159,6 +161,7 @@ func (v *ListCommand) execute() error {
 	return err
 }
 
+// GenerateAndStoreCommand contains the information needed to construct a call to generate and store a cert
 type GenerateAndStoreCommand struct {
 	Name string
 
@@ -298,12 +301,12 @@ func (v *GenerateAndStoreCommand) execute() error {
 	}
 
 	cp := &CredhubProxy{
-		baseUrl:           config.CredhubBaseUrl,
+		baseURL:           config.CredhubBaseURL,
 		accessToken:       config.AccessToken,
 		refreshToken:      config.RefreshToken,
-		authUrl:           config.AuthUrl,
+		authURL:           config.AuthURL,
 		skipTLSValidation: config.SkipTLSValidation,
-		clientId:          configYAML.ClientID,
+		clientID:          configYAML.ClientID,
 		clientSecret:      configYAML.ClientSecret,
 		configPath:        ".cv",
 	}
@@ -315,7 +318,7 @@ func (v *GenerateAndStoreCommand) execute() error {
 			username:      configYAML.VcertUsername,
 			password:      configYAML.VcertPassword,
 			zone:          configYAML.VcertZone,
-			baseUrl:       configYAML.VcertBaseUrl,
+			baseURL:       configYAML.VcertBaseURL,
 			connectorType: configYAML.ConnectorType,
 		},
 	}
@@ -335,16 +338,16 @@ func (v *GenerateAndStoreCommand) execute() error {
 
 	if v.Credhub {
 		return cv.generateAndStoreCredhub(v.Name, v, !v.GenOnly)
-	} else {
-		return cv.generateAndStore(v.Name, v, !v.GenOnly)
 	}
+	return cv.generateAndStore(v.Name, v, !v.GenOnly)
 }
 
+// LoginCommand contains the information required to construct a call to log in to the CredHub service
 type LoginCommand struct {
 	Username          string
 	Password          string
-	CredhubBaseUrl    string
-	ClientId          string
+	CredhubBaseURL    string
+	ClientID          string
 	ClientSecret      string
 	SkipTLSValidation bool
 	configYAML        *YAMLConfig
@@ -369,27 +372,27 @@ func (v *LoginCommand) validateFlags() error {
 		v.Password = v.configYAML.CredhubPassword
 	}
 
-	if v.configYAML.ClientID != "" && v.ClientId == "" {
-		v.ClientId = v.configYAML.ClientID
+	if v.configYAML.ClientID != "" && v.ClientID == "" {
+		v.ClientID = v.configYAML.ClientID
 	}
 
 	if v.configYAML.ClientSecret != "" && v.ClientSecret == "" {
 		v.ClientSecret = v.configYAML.ClientSecret
 	}
 
-	if v.configYAML.CredhubEndpoint != "" && v.CredhubBaseUrl == "" {
-		v.CredhubBaseUrl = v.configYAML.CredhubEndpoint
+	if v.configYAML.CredhubEndpoint != "" && v.CredhubBaseURL == "" {
+		v.CredhubBaseURL = v.configYAML.CredhubEndpoint
 	}
 
 	if v.configYAML.SkipTLSValidation && !v.SkipTLSValidation {
 		v.SkipTLSValidation = true
 	}
 
-	if v.Username == "" && v.ClientId == "" {
+	if v.Username == "" && v.ClientID == "" {
 		return fmt.Errorf("Username or clientid is required")
 	}
 
-	if v.CredhubBaseUrl == "" {
+	if v.CredhubBaseURL == "" {
 		return fmt.Errorf("Credhub endpoint url is required")
 	}
 
@@ -399,18 +402,18 @@ func (v *LoginCommand) validateFlags() error {
 func (v *LoginCommand) prepFlags() {
 	flag.StringVar(&v.Username, "u", "", "Username")
 	flag.StringVar(&v.Password, "p", "", "Password")
-	flag.StringVar(&v.CredhubBaseUrl, "url", "", "Credhub Base Url")
-	flag.StringVar(&v.ClientId, "clientid", "", "Client Id")
+	flag.StringVar(&v.CredhubBaseURL, "url", "", "Credhub Base Url")
+	flag.StringVar(&v.ClientID, "clientid", "", "Client Id")
 	flag.StringVar(&v.ClientSecret, "clientsecret", "", "Client Secret")
 	flag.BoolVar(&v.SkipTLSValidation, "skip-tls-validation", false, "Skip tls validation for test purposes")
 }
 
 func (v *LoginCommand) execute() error {
 	cp := &CredhubProxy{
-		baseUrl:           v.CredhubBaseUrl,
+		baseURL:           v.CredhubBaseURL,
 		username:          v.Username,
 		password:          v.Password,
-		clientId:          v.ClientId,
+		clientID:          v.ClientID,
 		clientSecret:      v.ClientSecret,
 		skipTLSValidation: v.SkipTLSValidation,
 		configPath:        ".cv",
@@ -422,6 +425,7 @@ func (v *LoginCommand) execute() error {
 	return err
 }
 
+// HelpCommand implements the "help" cli command
 type HelpCommand struct {
 }
 
@@ -446,6 +450,7 @@ Available commands:
 	return nil
 }
 
+// DeleteCommand contains the information required to construct a call to delete a cert
 type DeleteCommand struct {
 	Name string
 }
@@ -483,12 +488,12 @@ func (v *DeleteCommand) execute() error {
 	}
 
 	cp := &CredhubProxy{
-		baseUrl:           config.CredhubBaseUrl,
+		baseURL:           config.CredhubBaseURL,
 		accessToken:       config.AccessToken,
 		refreshToken:      config.RefreshToken,
-		authUrl:           config.AuthUrl,
+		authURL:           config.AuthURL,
 		skipTLSValidation: config.SkipTLSValidation,
-		clientId:          configYAML.ClientID,
+		clientID:          configYAML.ClientID,
 		clientSecret:      configYAML.ClientSecret,
 		configPath:        ".cv",
 	}
@@ -500,7 +505,7 @@ func (v *DeleteCommand) execute() error {
 			username:      configYAML.VcertUsername,
 			password:      configYAML.VcertPassword,
 			zone:          configYAML.VcertZone,
-			baseUrl:       configYAML.VcertBaseUrl,
+			baseURL:       configYAML.VcertBaseURL,
 			connectorType: configYAML.ConnectorType,
 		},
 	}
@@ -517,6 +522,7 @@ func (v *DeleteCommand) execute() error {
 	return cv.deleteCert(v.Name)
 }
 
+// NoopWriter represents a Writer that just returns
 type NoopWriter struct {
 }
 

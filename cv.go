@@ -29,8 +29,10 @@ import (
 	"github.com/Venafi/vcert/pkg/certificate"
 )
 
+// ConfigFile is the configuration file name
 var ConfigFile = ".cv.conf"
 
+// CV represents an object that manipulates both credhub and vcert
 type CV struct {
 	configPath   string
 	vcert        IVcertProxy
@@ -100,8 +102,8 @@ func (c *CV) generateAndStore(name string, args *GenerateAndStoreCommand, store 
 	return c.credhub.putCertificate(certName, ca, certificate, privateKey)
 }
 
-func (cp *CV) deleteCert(name string) error {
-	cert, err := cp.credhub.getCertificate(name)
+func (c *CV) deleteCert(name string) error {
+	cert, err := c.credhub.getCertificate(name)
 	if err != nil {
 		return err
 	}
@@ -113,24 +115,24 @@ func (cp *CV) deleteCert(name string) error {
 	tp2 := hex.EncodeToString(tp[:])
 
 	status("NOW DELETING FROM VENAFI '%s'\n", name)
-	err = cp.vcert.revoke(tp2)
+	err = c.vcert.revoke(tp2)
 	if err != nil {
 		return err
 	}
 
 	status("NOW DELETING FROM CREDHUB '%s'\n", name)
-	return cp.credhub.deleteCert(name)
+	return c.credhub.deleteCert(name)
 }
 
-func (cp *CV) listBoth(args *ListCommand) ([]CertCompareData, error) {
+func (c *CV) listBoth(args *ListCommand) ([]CertCompareData, error) {
 	status("LISTING...\n")
 
-	certInfo, err := cp.vcert.list(args.VenafiLimit, args.VenafiRoot)
+	certInfo, err := c.vcert.list(args.VenafiLimit, args.VenafiRoot)
 	if err != nil {
 		return []CertCompareData{}, err
 	}
 
-	items, err := cp.credhub.list()
+	items, err := c.credhub.list()
 	if err != nil {
 		return []CertCompareData{}, err
 	}
@@ -145,7 +147,7 @@ func (cp *CV) listBoth(args *ListCommand) ([]CertCompareData, error) {
 	var ct ComparisonStrategy
 	switch {
 	case args.ByThumbprint:
-		ct = &ThumbprintStrategy{getCertificate: cp.credhub.getCertificate}
+		ct = &ThumbprintStrategy{getCertificate: c.credhub.getCertificate}
 	case args.ByPath:
 		ct = &PathStrategy{leftPrefix: joinRoot(args.VenafiRoot, args.VenafiPrefix, "\\"), rightPrefix: joinRoot(args.CredhubRoot, args.CredhubPrefix, "/")}
 	default:
@@ -190,6 +192,7 @@ func jsonMarshallToFile(data interface{}, filename string) error {
 	return ioutil.WriteFile(filename, bytes, 0644)
 }
 
+// ComparisonStrategy defines the interface for comparing credentials
 type ComparisonStrategy interface {
 	leftGet(l certificate.CertificateInfo) string
 	rightGet(r credentials.CertificateMetadata) string
@@ -231,6 +234,7 @@ func compareCerts(ct ComparisonStrategy, certInfo []certificate.CertificateInfo,
 	return cc.data
 }
 
+// CertCompareData holds the necessary data for comparing certs
 type CertCompareData struct {
 	Left  *certificate.CertificateInfo
 	Right *credentials.CertificateMetadata
@@ -251,16 +255,22 @@ func (c CertCompareData) String() string {
 	return out
 }
 
+// DefaultCertCollector is a simple collector of cert comparison data
 type DefaultCertCollector struct {
 	data []CertCompareData
 }
 
+// CertificateInfo appends a cert from vcert to the collector
 func (m *DefaultCertCollector) CertificateInfo(item certificate.CertificateInfo) {
 	m.data = append(m.data, CertCompareData{Left: &item})
 }
+
+// CertificateMetadata appends a cert from credhub to the collector
 func (m *DefaultCertCollector) CertificateMetadata(item credentials.CertificateMetadata) {
 	m.data = append(m.data, CertCompareData{Right: &item})
 }
+
+// Equals compares a cert from vcert to one from credhub for identity
 func (m *DefaultCertCollector) Equals(ci certificate.CertificateInfo, cm credentials.CertificateMetadata) {
 	m.data = append(m.data, CertCompareData{Left: &ci, Right: &cm})
 }
@@ -346,6 +356,7 @@ func compareSortedLists(
 	}
 }
 
+// CommonNameStrategy with its methods, represents the strategy to normalize cert names
 type CommonNameStrategy struct {
 	leftPrefix  string
 	rightPrefix string
@@ -383,6 +394,7 @@ func (t *CommonNameStrategy) values(l *certificate.CertificateInfo, r *credentia
 	return []string{left, right}
 }
 
+// ThumbprintStrategy handles cert thumbprints
 type ThumbprintStrategy struct {
 	leftPrefix      string
 	rightPrefix     string
@@ -500,6 +512,7 @@ func (t *ThumbprintStrategy) postSort(l []CertCompareData) {
 	})
 }
 
+// PathStrategy handles normalization of file paths
 type PathStrategy struct {
 	leftPrefix  string
 	rightPrefix string
@@ -571,6 +584,7 @@ func prependVEDRoot(zone string) string {
 	return "\\VED\\" + zone
 }
 
+// TPPGeneratedNameRegex specifies valid cert names
 var TPPGeneratedNameRegex = regexp.MustCompile(`(.*)_[0-9]{2}[a-z]{3}[0-9]{2}_[A-Z]{2}[0-9]{2}`)
 
 func removeTPPUploadSuffix(input string) string {
