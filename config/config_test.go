@@ -13,3 +13,32 @@
 // limitations under the License.
 
 package config_test
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/newcontext-oss/credhub-venafi/config"
+)
+
+func TestReadConfig(t *testing.T) {
+	desired := &config.YAMLConfig{
+		VcertUsername:   "test",
+		VcertPassword:   "test",
+		VcertZone:       "some_zone",
+		VcertBaseURL:    "some_url",
+		ConnectorType:   "some_type",
+		ClientID:        "some_id",
+		ClientSecret:    "some_secret",
+		CredhubUsername: "test2",
+		CredhubPassword: "test2",
+		CredhubEndpoint: "some_other_url",
+	}
+	actual, err := config.ReadConfig("../testdata", "test_config.yml")
+	if err != nil {
+		t.Fail()
+		t.Logf("Failed to create config from file: %s", err)
+	}
+	assert.Equal(t, desired, actual, "It should create a valid config from a yaml file")
+}
