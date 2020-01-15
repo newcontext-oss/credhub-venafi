@@ -53,7 +53,7 @@ jobs:
       - name: Test
         env:
           GOPROXY: "https://proxy.golang.org"
-        run: go test -v .
+        run: go test -v ./...
 
   Lint:
     name: Lint
@@ -69,7 +69,7 @@ jobs:
           # https://github.com/actions/setup-go/issues/14
           export PATH=${PATH}:`go env GOPATH`/bin
           go get -u golang.org/x/lint/golint
-          golint -set_exit_status
+          golint -set_exit_status ./...
 
   Staticcheck:
     name: Staticcheck
