@@ -260,7 +260,7 @@ func TestConfigReadWrite(t *testing.T) {
 }
 
 func TestYAML2(t *testing.T) {
-	alt, err := readConfigFile("/tmp/", "yaml.yml")
+	alt, err := config.ReadConfig("/tmp/", "yaml.yml")
 	if err != nil {
 		t.Fatal(err)
 	}

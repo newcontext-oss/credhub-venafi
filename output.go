@@ -22,6 +22,7 @@ import (
 
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials"
 	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/newcontext-oss/credhub-venafi/config"
 )
 
 var red = "\033[31m"
@@ -102,28 +103,28 @@ type prettyPrinter interface {
 }
 
 func verbose(format string, a ...interface{}) {
-	if logLevel >= VERBOSE {
+	if config.LogLevel >= config.VERBOSE {
 		fmt.Printf(format, a...)
 		writeToLogFile(format, a...)
 	}
 }
 
 func info(format string, a ...interface{}) {
-	if logLevel >= INFO {
+	if config.LogLevel >= config.INFO {
 		fmt.Printf(format, a...)
 		writeToLogFile(format, a...)
 	}
 }
 
 func output(format string, a ...interface{}) {
-	if logLevel >= STATUS {
+	if config.LogLevel >= config.STATUS {
 		fmt.Printf(format, a...)
 		writeToLogFile(format, a...)
 	}
 }
 
 func status(format string, a ...interface{}) {
-	if logLevel >= STATUS {
+	if config.LogLevel >= config.STATUS {
 		fmt.Print(green)
 		fmt.Printf(format, a...)
 		writeToLogFile(format, a...)
@@ -131,13 +132,13 @@ func status(format string, a ...interface{}) {
 }
 
 func helpoutput(format string, a ...interface{}) {
-	if logLevel >= STATUS {
+	if config.LogLevel >= config.STATUS {
 		fmt.Fprintf(os.Stderr, format, a...)
 	}
 }
 
 func errorf(format string, a ...interface{}) {
-	if logLevel >= ERROR {
+	if config.LogLevel >= config.ERROR {
 		fmt.Print(red)
 		fmt.Printf(format, a...)
 		writeToLogFile(format, a...)
