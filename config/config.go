@@ -68,7 +68,7 @@ func ReadConfig(homedir string, path string) (*YAMLConfig, error) {
 		return nil, err
 	}
 
-	err = yaml.Unmarshal(file, &tt)
+	err = yaml.UnmarshalStrict(file, &tt)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func ReadConfig(homedir string, path string) (*YAMLConfig, error) {
 	}
 
 	logfilePath := CVLogFilename
-	f, err := os.OpenFile(logfilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile(logfilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		return nil, fmt.Errorf("error opening log file: %v", err)
 	}

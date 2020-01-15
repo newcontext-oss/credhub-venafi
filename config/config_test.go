@@ -22,23 +22,36 @@ import (
 	"github.com/newcontext-oss/credhub-venafi/config"
 )
 
-func TestReadConfig(t *testing.T) {
+var dataDir string = "../testdata/config"
+
+func TestReadConfigWithValidFile(t *testing.T) {
 	desired := &config.YAMLConfig{
 		VcertUsername:   "test",
 		VcertPassword:   "test",
 		VcertZone:       "some_zone",
 		VcertBaseURL:    "some_url",
-		ConnectorType:   "some_type",
+		ConnectorType:   "tpp",
 		ClientID:        "some_id",
 		ClientSecret:    "some_secret",
 		CredhubUsername: "test2",
 		CredhubPassword: "test2",
 		CredhubEndpoint: "some_other_url",
+		LogLevel:        "info",
 	}
-	actual, err := config.ReadConfig("../testdata", "test_config.yml")
+	actual, err := config.ReadConfig(dataDir, "test_config.yml")
 	if err != nil {
 		t.Fail()
 		t.Logf("Failed to create config from file: %s", err)
 	}
 	assert.Equal(t, desired, actual, "It should create a valid config from a yaml file")
+}
+
+func TestReadConfigWithMissingFile(t *testing.T) {
+	_, err := config.ReadConfig(dataDir, "missing.yml")
+	assert.NotNil(t, err, "It should raise an error when the config file is missing")
+}
+
+func TestReadConfigWithInvalidFile(t *testing.T) {
+	_, err := config.ReadConfig(dataDir, "test_config_invalid.yml")
+	assert.NotNil(t, err, "It should raise an error when the config file is invalid")
 }
