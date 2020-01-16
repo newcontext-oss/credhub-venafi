@@ -22,7 +22,8 @@ jobs:
           go get code.cloudfoundry.org/credhub-cli
           go get github.com/Venafi/vcert
           go get gopkg.in/yaml.v2
-          echo "CWD: `which pwd`"
+          echo "CWD: `pwd`"
+          ls
 
       - name: Build
         env:
