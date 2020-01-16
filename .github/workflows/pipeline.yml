@@ -12,6 +12,9 @@ jobs:
 
       - name: Check out source code
         uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+          path: "/Users/runner/go/src/github.com/newcontext-oss/credhub-venafi"
 
       - name: Download dependencies
         run: |
