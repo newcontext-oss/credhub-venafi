@@ -1,5 +1,5 @@
 name: Pipeline
-on: [pull_request]
+on: [push, pull_request]
 jobs:
   build:
     name: Build
@@ -22,6 +22,7 @@ jobs:
           go get code.cloudfoundry.org/credhub-cli
           go get github.com/Venafi/vcert
           go get gopkg.in/yaml.v2
+          echo "CWD: `which pwd`"
 
       - name: Build
         env:
