@@ -43,9 +43,6 @@ jobs:
           # TODO: this will hopefully be fixed by
           # https://github.com/actions/setup-go/issues/14
           export PATH=${PATH}:`go env GOPATH`/bin
-          go get code.cloudfoundry.org/credhub-cli
-          go get github.com/Venafi/vcert
-          go get gopkg.in/yaml.v2
 
       - name: Test
         env:
@@ -82,9 +79,6 @@ jobs:
           # https://github.com/actions/setup-go/issues/14
           export PATH=${PATH}:`go env GOPATH`/bin
           # Download dependencies
-          go get code.cloudfoundry.org/credhub-cli
-          go get github.com/Venafi/vcert
-          go get gopkg.in/yaml.v2
           # Download Staticcheck
           go get -u honnef.co/go/tools/cmd/staticcheck
           staticcheck ./...
