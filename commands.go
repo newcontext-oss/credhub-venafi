@@ -24,6 +24,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/newcontext-oss/credhub-venafi/config"
+
 	"github.com/Venafi/vcert/pkg/certificate"
 )
 
@@ -106,7 +108,7 @@ func (v *ListCommand) execute() error {
 		return err
 	}
 
-	configYAML, err := readConfigFile(userHomeDir, ConfigFile)
+	configYAML, err := config.ReadConfig(userHomeDir, ConfigFile)
 	if err != nil {
 		return err
 	}
@@ -285,7 +287,7 @@ func (v *GenerateAndStoreCommand) execute() error {
 		return err
 	}
 
-	configYAML, err := readConfigFile(userHomeDir, ConfigFile)
+	configYAML, err := config.ReadConfig(userHomeDir, ConfigFile)
 	if err != nil {
 		return err
 	}
@@ -350,7 +352,7 @@ type LoginCommand struct {
 	ClientID          string
 	ClientSecret      string
 	SkipTLSValidation bool
-	configYAML        *YAMLConfig
+	configYAML        *config.YAMLConfig
 }
 
 func (v *LoginCommand) validateFlags() error {
@@ -359,7 +361,7 @@ func (v *LoginCommand) validateFlags() error {
 		return err
 	}
 
-	v.configYAML, err = readConfigFile(userHomeDir, ConfigFile)
+	v.configYAML, err = config.ReadConfig(userHomeDir, ConfigFile)
 	if err != nil {
 		return err
 	}
@@ -472,7 +474,7 @@ func (v *DeleteCommand) execute() error {
 		return err
 	}
 
-	configYAML, err := readConfigFile(userHomeDir, ConfigFile)
+	configYAML, err := config.ReadConfig(userHomeDir, ConfigFile)
 	if err != nil {
 		return err
 	}

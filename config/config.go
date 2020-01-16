@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package config
 
 import (
 	"fmt"
@@ -39,7 +39,8 @@ var STATUS int32 = 2
 // ERROR contains the int32 value for error-level logging
 var ERROR int32 = 1
 
-var logLevel int32 = STATUS
+// LogLevel represents the desired log verbosity
+var LogLevel int32 = STATUS
 
 // YAMLConfig contains the configuration values and yaml tags for the config file
 type YAMLConfig struct {
@@ -58,7 +59,8 @@ type YAMLConfig struct {
 	SkipTLSValidation bool `yaml:"skip_tls_validation"`
 }
 
-func readConfigFile(homedir string, path string) (*YAMLConfig, error) {
+// ReadConfig reads the configuration file and returns the information in a struct
+func ReadConfig(homedir string, path string) (*YAMLConfig, error) {
 	configpath := filepath.Join(homedir, path)
 	tt := YAMLConfig{}
 	file, err := ioutil.ReadFile(configpath)
@@ -66,7 +68,7 @@ func readConfigFile(homedir string, path string) (*YAMLConfig, error) {
 		return nil, err
 	}
 
-	err = yaml.Unmarshal(file, &tt)
+	err = yaml.UnmarshalStrict(file, &tt)
 	if err != nil {
 		return nil, err
 	}
@@ -76,17 +78,17 @@ func readConfigFile(homedir string, path string) (*YAMLConfig, error) {
 
 	switch tt.LogLevel {
 	case "error":
-		logLevel = ERROR
+		LogLevel = ERROR
 	case "info":
-		logLevel = INFO
+		LogLevel = INFO
 	case "verbose":
-		logLevel = VERBOSE
+		LogLevel = VERBOSE
 	case "status":
-		logLevel = STATUS
+		LogLevel = STATUS
 	}
 
 	logfilePath := CVLogFilename
-	f, err := os.OpenFile(logfilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile(logfilePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		return nil, fmt.Errorf("error opening log file: %v", err)
 	}

@@ -1,0 +1,3 @@
+# Ignore our binary and log file from test runs
+cv
+cv.log
