@@ -237,7 +237,7 @@ type GenerateAndStoreCommand struct {
 
 func (v *GenerateAndStoreCommand) validateFlags() error {
 	if v.CommonName == "" && len(v.SANDNS) == 0 {
-		return errors.New("You must have a common name or san-dns")
+		return errors.New("you must have a common name or san-dns")
 	}
 	return nil
 }
@@ -391,11 +391,11 @@ func (v *LoginCommand) validateFlags() error {
 	}
 
 	if v.Username == "" && v.ClientID == "" {
-		return fmt.Errorf("Username or clientid is required")
+		return fmt.Errorf("username or clientid is required")
 	}
 
 	if v.CredhubBaseURL == "" {
-		return fmt.Errorf("Credhub endpoint url is required")
+		return fmt.Errorf("credhub endpoint url is required")
 	}
 
 	return nil
@@ -562,7 +562,7 @@ func (is *ipSlice) Set(value string) error {
 		*is = append(*is, temp)
 		return nil
 	}
-	return fmt.Errorf("Failed to convert %s to an IP Address", value)
+	return fmt.Errorf("failed to convert %s to an IP Address", value)
 }
 
 type emailSlice []string
@@ -580,7 +580,7 @@ func (es *emailSlice) Set(value string) error {
 		*es = append(*es, value)
 		return nil
 	}
-	return fmt.Errorf("Failed to convert %s to an Email Address", value)
+	return fmt.Errorf("failed to convert %s to an Email Address", value)
 }
 
 const emailRegex = "[[:alnum:]][\\w\\.-]*[[:alnum:]]@[[:alnum:]][\\w\\.-]*[[:alnum:]]\\.[[:alpha:]][a-z\\.]*[[:alpha:]]$"
