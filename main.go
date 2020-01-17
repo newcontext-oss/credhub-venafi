@@ -29,6 +29,4 @@ func parse() {
 
 func main() {
 	parse()
-
-	return
 }

@@ -99,7 +99,7 @@ func (v *VcertProxy) login() error {
 	case "tpp":
 		connectorType = endpoint.ConnectorTypeTPP
 	default:
-		return fmt.Errorf("Connector type '%s' not found", v.connectorType)
+		return fmt.Errorf("connector type '%s' not found", v.connectorType)
 	}
 	conf := vcert.Config{
 		Credentials:   &auth,
@@ -141,6 +141,9 @@ func (v *VcertProxy) generate(args *GenerateAndStoreCommand) (*certificate.PEMCo
 	}
 
 	requestID, privateKey, err := sendCertificateRequest(v.client, req)
+	if err != nil {
+		return nil, err
+	}
 
 	pickupReq := &certificate.Request{
 		PickupID: requestID,

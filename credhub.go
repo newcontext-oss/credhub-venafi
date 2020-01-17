@@ -70,7 +70,7 @@ func (c *ConfigLoader) writeConfig(cvConfig *CVConfig) error {
 func (c *ConfigLoader) readConfig() (*CVConfig, error) {
 	configdir := filepath.Join(c.userHomeDir, c.cvConfigDir)
 	if _, err := os.Stat(configdir); os.IsNotExist(err) {
-		return nil, fmt.Errorf("No config dir %s %s", configdir, err)
+		return nil, fmt.Errorf("no config dir %s %s", configdir, err)
 	}
 
 	cvConfig := CVConfig{}
