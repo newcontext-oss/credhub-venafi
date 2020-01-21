@@ -27,6 +27,7 @@ import (
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials"
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials/generate"
 	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/newcontext-oss/credhub-venafi/output"
 )
 
 // ConfigFile is the configuration file name
@@ -63,7 +64,7 @@ func (c *CV) generateAndStoreCredhub(name string, v *GenerateAndStoreCommand, st
 		IsCA:             v.IsCA,
 	}
 
-	status("NOW GENERATING ON CREDHUB '%s'\n", name)
+	output.Status("NOW GENERATING ON CREDHUB '%s'\n", name)
 	certificate, err := c.credhub.generateCertificate(name, parameters, credhub.NoOverwrite)
 	if err != nil {
 		return err
@@ -73,7 +74,7 @@ func (c *CV) generateAndStoreCredhub(name string, v *GenerateAndStoreCommand, st
 		return nil
 	}
 
-	status("NOW UPLOADING TO VENAFI '%s'\n", name)
+	output.Status("NOW UPLOADING TO VENAFI '%s'\n", name)
 	err = c.vcert.putCertificate(name, certificate.Value.Certificate, certificate.Value.PrivateKey)
 	if err != nil {
 		return err
@@ -83,7 +84,7 @@ func (c *CV) generateAndStoreCredhub(name string, v *GenerateAndStoreCommand, st
 }
 
 func (c *CV) generateAndStore(name string, args *GenerateAndStoreCommand, store bool) error {
-	status("NOW GENERATING ON VENAFI '%s'\n", name)
+	output.Status("NOW GENERATING ON VENAFI '%s'\n", name)
 	// we assume that login has already been done on credhub
 	cert, err := c.vcert.generate(args)
 	if err != nil {
@@ -94,7 +95,7 @@ func (c *CV) generateAndStore(name string, args *GenerateAndStoreCommand, store 
 		return nil
 	}
 
-	status("NOW UPLOADING TO CREDHUB '%s'\n", name)
+	output.Status("NOW UPLOADING TO CREDHUB '%s'\n", name)
 	certName := name
 	ca := ""
 	certificate := cert.Certificate
@@ -114,18 +115,18 @@ func (c *CV) deleteCert(name string) error {
 	}
 	tp2 := hex.EncodeToString(tp[:])
 
-	status("NOW DELETING FROM VENAFI '%s'\n", name)
+	output.Status("NOW DELETING FROM VENAFI '%s'\n", name)
 	err = c.vcert.revoke(tp2)
 	if err != nil {
 		return err
 	}
 
-	status("NOW DELETING FROM CREDHUB '%s'\n", name)
+	output.Status("NOW DELETING FROM CREDHUB '%s'\n", name)
 	return c.credhub.deleteCert(name)
 }
 
 func (c *CV) listBoth(args *ListCommand) ([]CertCompareData, error) {
-	status("LISTING...\n")
+	output.Status("LISTING...\n")
 
 	certInfo, err := c.vcert.list(args.VenafiLimit, args.VenafiRoot)
 	if err != nil {
@@ -158,11 +159,11 @@ func (c *CV) listBoth(args *ListCommand) ([]CertCompareData, error) {
 	e, ok := ct.(processErrors)
 	if ok {
 		for _, each := range e.getErrors() {
-			errorf("%s\n", each)
+			output.Errorf("%s\n", each)
 		}
 	}
 	if len(certInfo) == args.VenafiLimit {
-		errorf("The Venafi limit was hit, consider increasing -vlimit to increase the number of allowed records.\n")
+		output.Errorf("The Venafi limit was hit, consider increasing -vlimit to increase the number of allowed records.\n")
 	}
 
 	return data, nil
@@ -179,7 +180,7 @@ func joinRoot(a, b, sep string) string {
 
 func printCerts(data []CertCompareData) {
 	for i, d := range data {
-		verbose("%d %+v\n", i, d)
+		output.Verbose("%d %+v\n", i, d)
 	}
 }
 
@@ -215,7 +216,7 @@ func compareTransform(l certificate.CertificateInfo, r credentials.CertificateMe
 
 	cmpVal := strings.Compare(commonName, credhubName)
 
-	verbose("compare commonName %s with credhubName %s out %d\n", commonName, credhubName, cmpVal)
+	output.Verbose("compare commonName %s with credhubName %s out %d\n", commonName, credhubName, cmpVal)
 	return cmpVal
 }
 
@@ -310,11 +311,11 @@ func compareLists(
 	// print the sorted lists using get
 	for _, item := range l {
 		after := tct.leftTransform(tct.leftGet(item))
-		verbose("left %s", after)
+		output.Verbose("left %s", after)
 	}
 	for _, item := range r {
 		after := tct.rightTransform(tct.rightGet(item))
-		verbose("right %s", after)
+		output.Verbose("right %s", after)
 	}
 
 	compareSortedLists(l, r, comparison, collector)
@@ -428,7 +429,7 @@ func (t *ThumbprintStrategy) rightGet(r credentials.CertificateMetadata) string 
 		t.errors = append(t.errors, err)
 	}
 	tp2 := hex.EncodeToString(tp[:])
-	verbose("thumbprint %s path %s", tp2, in)
+	output.Verbose("thumbprint %s path %s", tp2, in)
 	// then we store that thumbprint in the cache
 	t.cache()[in] = tp2
 	// and we return that thumbprint
@@ -599,4 +600,72 @@ func extractLastSegment(input string) string {
 func credhubTransform(input string) string {
 	input = extractLastSegment(input)
 	return removeTPPUploadSuffix(input)
+}
+
+func max(x, y int) int {
+	if x < y {
+		return y
+	}
+	return x
+}
+
+type prettyPrinter interface {
+	headers() []string
+	values(l *certificate.CertificateInfo, r *credentials.CertificateMetadata) []string
+}
+
+func printCertsPretty(ct ComparisonStrategy, data []CertCompareData) {
+	pp, ok := ct.(prettyPrinter)
+	if !ok {
+		return
+	}
+
+	header2 := ""
+	headers := pp.headers()
+	header0 := headers[0]
+	header1 := headers[1]
+	if len(headers) > 2 {
+		header2 = headers[2]
+	}
+
+	leftLongest := 0
+	rightLongest := 0
+	auxLongest := 0
+	for _, d := range data {
+		values := pp.values(d.Left, d.Right)
+		left := values[0]
+		right := values[1]
+		if len(headers) > 2 {
+			auxLongest = max(auxLongest, len(values[2]))
+		}
+		leftLongest = max(leftLongest, len(left))
+		rightLongest = max(rightLongest, len(right))
+	}
+
+	header := ""
+	if len(headers) > 2 {
+		header = fmt.Sprintf("%s%s | %s | %s\n", output.Cyan, output.CenteredString(header0, leftLongest), output.CenteredString(header1, rightLongest), output.CenteredString(header2, auxLongest))
+	} else {
+		header = fmt.Sprintf("%s%s | %s\n", output.Cyan, output.CenteredString(header0, leftLongest), output.CenteredString(header1, rightLongest))
+	}
+	output.Print("%s", header)
+	output.Print("%s\n", strings.Repeat("-", leftLongest+rightLongest+auxLongest+3*(len(headers)-1)))
+
+	for _, d := range data {
+		values := pp.values(d.Left, d.Right)
+		left := values[0]
+		right := values[1]
+		leftColor := output.Red
+		rightColor := output.Red
+		if left != "" && right != "" {
+			leftColor = output.Green
+			rightColor = output.Green
+		}
+
+		if len(headers) > 2 {
+			output.Print("%s%[2]*s %s| %s%[6]*s %s| %[9]*s\n", leftColor, -leftLongest, left, output.Cyan, rightColor, -rightLongest, right, output.Cyan, auxLongest, values[2])
+		} else {
+			output.Print("%s%[2]*s %s| %s%[6]*s\n", leftColor, -leftLongest, left, output.Cyan, rightColor, -rightLongest, right)
+		}
+	}
 }

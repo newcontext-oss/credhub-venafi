@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/newcontext-oss/credhub-venafi/config"
+	"github.com/newcontext-oss/credhub-venafi/output"
 
 	"github.com/Venafi/vcert/pkg/certificate"
 )
@@ -422,7 +423,7 @@ func (v *LoginCommand) execute() error {
 	}
 	err := cp.auth()
 	if err == nil {
-		status("Login Successful\n")
+		output.Status("Login Successful\n")
 	}
 	return err
 }
@@ -439,7 +440,7 @@ func (v *HelpCommand) prepFlags() {
 }
 
 func (v *HelpCommand) execute() error {
-	helpoutput(
+	output.HelpOutput(
 		`Usage:
   cv [command]
 

@@ -25,6 +25,7 @@ import (
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials"
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials/values"
 	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/newcontext-oss/credhub-venafi/output"
 )
 
 func TestCmpMethod(t *testing.T) {
@@ -492,7 +493,7 @@ func GetCert() string {
 }
 
 func TestErrorf(t *testing.T) {
-	errorf("error: %s", fmt.Errorf("hello"))
+	output.Errorf("error: %s", fmt.Errorf("hello"))
 }
 
 func TestCenter(t *testing.T) {
@@ -501,7 +502,7 @@ func TestCenter(t *testing.T) {
 
 	// centered := fmt.Sprintf("|%[1]*s|", -w, fmt.Sprintf("%[1]*s", (w+len(s))/2, s))
 	// centered = truncateString(centered, 110)
-	centered := centeredString(s, w)
+	centered := output.CenteredString(s, w)
 	fmt.Println("s", centered, len(centered))
 }
 
@@ -530,13 +531,13 @@ func TestPrettify(t *testing.T) {
 		rightLongest = max(rightLongest, len(item.right))
 	}
 
-	header := fmt.Sprintf("%s%s | %s\n", cyan, centeredString("VENAFI", leftLongest), centeredString("CREDHUB", rightLongest))
+	header := fmt.Sprintf("%s%s | %s\n", output.Cyan, output.CenteredString("VENAFI", leftLongest), output.CenteredString("CREDHUB", rightLongest))
 	fmt.Print(header)
 	fmt.Println(strings.Repeat("-", leftLongest+rightLongest+3))
 
 	for _, item := range compareResults {
 		// fmt.Printf("%[1]*s | %[1]*s\n", -leftLongest, item.left, -rightLongest, item.right)
-		fmt.Printf("%s%[2]*s %s| %s%[6]*s\n", green, -leftLongest, item.left, cyan, green, -rightLongest, item.right)
+		fmt.Printf("%s%[2]*s %s| %s%[6]*s\n", output.Green, -leftLongest, item.left, output.Cyan, output.Green, -rightLongest, item.right)
 	}
 	// fmt.Printf("%s|%s")
 }
