@@ -42,6 +42,9 @@ var ERROR int32 = 1
 // LogLevel represents the desired log verbosity
 var LogLevel int32 = STATUS
 
+// Quiet is a flag to suppress normal output to stdout, but not the log
+var Quiet bool = false
+
 // YAMLConfig contains the configuration values and yaml tags for the config file
 type YAMLConfig struct {
 	VcertUsername   string `yaml:"vcert_username"`
