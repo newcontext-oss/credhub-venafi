@@ -31,83 +31,11 @@ var Green = "\033[32m"
 // Cyan defines the color cyan for this app
 var Cyan = "\033[36m"
 
-/*
-func printCertsPretty(ct ComparisonStrategy, data []CertCompareData) {
-	pp, ok := ct.(prettyPrinter)
-	if !ok {
-		return
-	}
-
-	header2 := ""
-	headers := pp.headers()
-	header0 := headers[0]
-	header1 := headers[1]
-	if len(headers) > 2 {
-		header2 = headers[2]
-	}
-
-	leftLongest := 0
-	rightLongest := 0
-	auxLongest := 0
-	for _, d := range data {
-		values := pp.values(d.Left, d.Right)
-		left := values[0]
-		right := values[1]
-		if len(headers) > 2 {
-			auxLongest = max(auxLongest, len(values[2]))
-		}
-		leftLongest = max(leftLongest, len(left))
-		rightLongest = max(rightLongest, len(right))
-	}
-
-	header := ""
-	if len(headers) > 2 {
-		header = fmt.Sprintf("%s%s | %s | %s\n", cyan, centeredString(header0, leftLongest), centeredString(header1, rightLongest), centeredString(header2, auxLongest))
-	} else {
-		header = fmt.Sprintf("%s%s | %s\n", cyan, centeredString(header0, leftLongest), centeredString(header1, rightLongest))
-	}
-	Print("%s", header)
-	Print("%s\n", strings.Repeat("-", leftLongest+rightLongest+auxLongest+3*(len(headers)-1)))
-
-	for _, d := range data {
-		values := pp.values(d.Left, d.Right)
-		left := values[0]
-		right := values[1]
-		leftColor := red
-		rightColor := red
-		if left != "" && right != "" {
-			leftColor = green
-			rightColor = green
-		}
-
-		if len(headers) > 2 {
-			Print("%s%[2]*s %s| %s%[6]*s %s| %[9]*s\n", leftColor, -leftLongest, left, cyan, rightColor, -rightLongest, right, cyan, auxLongest, values[2])
-		} else {
-			Print("%s%[2]*s %s| %s%[6]*s\n", leftColor, -leftLongest, left, cyan, rightColor, -rightLongest, right)
-		}
-	}
-}
-*/
-
 // CenteredString returns a string centered at the given length
 func CenteredString(s string, w int) string {
 	centered := fmt.Sprintf("%[1]*s", -w, fmt.Sprintf("%[1]*s", (w+len(s))/2, s))
 	return centered
 }
-
-func max(x, y int) int {
-	if x < y {
-		return y
-	}
-	return x
-}
-
-/*
-type prettyPrinter interface {
-	headers() []string
-	values(l *certificate.CertificateInfo, r *credentials.CertificateMetadata) []string
-}
-*/
 
 // Verbose writes a log entry if the log_level is VERBOSE or higher
 func Verbose(format string, a ...interface{}) {
