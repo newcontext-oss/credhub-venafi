@@ -23,6 +23,7 @@ import (
 	"github.com/Venafi/vcert"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/Venafi/vcert/pkg/endpoint"
+	"github.com/newcontext-oss/credhub-venafi/output"
 )
 
 // IVcertProxy defines the interface for proxies that manage requests to vcert
@@ -59,12 +60,12 @@ func (v *VcertProxy) putCertificate(certName string, cert string, privateKey str
 	if err != nil {
 		return err
 	}
-	verbose("%+v", importResp)
+	output.Verbose("%+v", importResp)
 	return nil
 }
 
 func (v *VcertProxy) list(limit int, zone string) ([]certificate.CertificateInfo, error) {
-	info("vcert list from proxy")
+	output.Info("vcert list from proxy")
 
 	v.client.SetZone(prependVEDRoot(zone))
 	filter := endpoint.Filter{Limit: &limit, WithExpired: true}
@@ -72,9 +73,9 @@ func (v *VcertProxy) list(limit int, zone string) ([]certificate.CertificateInfo
 	if err != nil {
 		return []certificate.CertificateInfo{}, err
 	}
-	verbose("certInfo %+v", certInfo)
+	output.Verbose("certInfo %+v", certInfo)
 	for a, b := range certInfo {
-		verbose("cert %+v %+v\n", a, b)
+		output.Verbose("cert %+v %+v\n", a, b)
 	}
 	return certInfo, nil
 }
@@ -130,7 +131,7 @@ func (v *VcertProxy) revoke(thumbprint string) error {
 		return err
 	}
 
-	verbose("Successfully submitted revocation request for thumbprint %s", thumbprint)
+	output.Verbose("Successfully submitted revocation request for thumbprint %s", thumbprint)
 	return nil
 }
 
@@ -215,6 +216,6 @@ func sendCertificateRequest(c endpoint.Connector, enrollReq *certificate.Request
 	}
 	privateKey = string(pem.EncodeToMemory(pemBlock))
 
-	verbose("Successfully submitted certificate request. Will pickup certificate by ID %s", requestID)
+	output.Verbose("Successfully submitted certificate request. Will pickup certificate by ID %s", requestID)
 	return requestID, privateKey, nil
 }

@@ -31,6 +31,7 @@ import (
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials"
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials/generate"
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials/values"
+	"github.com/newcontext-oss/credhub-venafi/output"
 )
 
 // ConfigLoader has configuration location info and methods to load the config
@@ -121,7 +122,7 @@ type CredhubProxy struct {
 
 func (cp *CredhubProxy) generateCertificate(name string, parameters generate.Certificate, overwrite credhub.Mode) (credentials.Certificate, error) {
 	newCert, err := cp.client.GenerateCertificate(name, parameters, overwrite)
-	verbose("newCert %+v", newCert)
+	output.Verbose("newCert %+v", newCert)
 	return newCert, err
 }
 

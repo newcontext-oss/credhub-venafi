@@ -14,16 +14,18 @@
 
 package main
 
+import "github.com/newcontext-oss/credhub-venafi/output"
+
 func parse() {
 	v, err := parseCommand()
 	if err != nil {
-		errorf("%s", err)
+		output.Errorf("%s", err)
 		return
 	}
 
 	err = v.execute()
 	if err != nil {
-		errorf("%s", err)
+		output.Errorf("%s", err)
 	}
 }
 
