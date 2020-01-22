@@ -25,8 +25,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var dataDir string = "../testdata/config"
-
 func TestCenteredString(t *testing.T) {
 	in := "center"
 	desired := "  center  "
