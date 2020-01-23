@@ -66,6 +66,7 @@ func parseCommand() (Command, error) {
 	os.Args = newArgs
 
 	v.prepFlags()
+	flag.BoolVar(&config.Quiet, "quiet", false, "Suppress normal output to stdout.")
 
 	flag.Parse()
 	err := v.validateFlags()

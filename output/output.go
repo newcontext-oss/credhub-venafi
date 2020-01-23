@@ -40,7 +40,7 @@ func CenteredString(s string, w int) string {
 // Verbose writes a log entry if the log_level is VERBOSE or higher
 func Verbose(format string, a ...interface{}) {
 	if config.LogLevel >= config.VERBOSE {
-		fmt.Printf(format, a...)
+		printf(format, a...)
 		writeToLogFile(format, a...)
 	}
 }
@@ -48,24 +48,24 @@ func Verbose(format string, a ...interface{}) {
 // Info writes a log entry if the log_level is INFO or higher
 func Info(format string, a ...interface{}) {
 	if config.LogLevel >= config.INFO {
-		fmt.Printf(format, a...)
+		printf(format, a...)
 		writeToLogFile(format, a...)
 	}
 }
 
 // Print writes a log entry if the log_level is STATUS or higher
 func Print(format string, a ...interface{}) {
+	printf(format, a...)
 	if config.LogLevel >= config.STATUS {
-		fmt.Printf(format, a...)
 		writeToLogFile(format, a...)
 	}
 }
 
 // Status writes a log entry if the log_level is STATUS or higher
 func Status(format string, a ...interface{}) {
+	fmt.Print(Green)
+	printf(format, a...)
 	if config.LogLevel >= config.STATUS {
-		fmt.Print(Green)
-		fmt.Printf(format, a...)
 		writeToLogFile(format, a...)
 	}
 }
@@ -79,13 +79,20 @@ func HelpOutput(format string, a ...interface{}) {
 
 // Errorf writes a log entry if the log_level is ERROR or higher
 func Errorf(format string, a ...interface{}) {
+	fmt.Print(Red)
+	printf(format, a...)
 	if config.LogLevel >= config.ERROR {
-		fmt.Print(Red)
-		fmt.Printf(format, a...)
 		writeToLogFile(format, a...)
 	}
 }
 
 func writeToLogFile(format string, a ...interface{}) {
 	log.Printf(format, a...)
+}
+
+func printf(format string, a ...interface{}) {
+	// Suppress output if the quiet flag is set
+	if !config.Quiet {
+		fmt.Printf(format, a...)
+	}
 }
