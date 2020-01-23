@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package chclient
 
 import (
 	"crypto/sha1"
@@ -36,13 +36,13 @@ import (
 
 // ConfigLoader has configuration location info and methods to load the config
 type ConfigLoader struct {
-	userHomeDir    string
-	cvConfigDir    string
-	configFilename string
+	UserHomeDir    string
+	CVConfigDir    string
+	ConfigFilename string
 }
 
 func (c *ConfigLoader) ensureDirExists() error {
-	homedir := filepath.Join(c.userHomeDir, c.cvConfigDir)
+	homedir := filepath.Join(c.UserHomeDir, c.CVConfigDir)
 	if _, err := os.Stat(homedir); os.IsNotExist(err) {
 		err := os.Mkdir(homedir, os.ModePerm)
 		if err != nil {
@@ -54,28 +54,29 @@ func (c *ConfigLoader) ensureDirExists() error {
 }
 
 func (c *ConfigLoader) writeConfig(cvConfig *CVConfig) error {
-	homedir := filepath.Join(c.userHomeDir, c.cvConfigDir)
+	homedir := filepath.Join(c.UserHomeDir, c.CVConfigDir)
 
 	b, err := json.Marshal(&cvConfig)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(homedir, c.configFilename), b, os.ModePerm)
+	err = ioutil.WriteFile(filepath.Join(homedir, c.ConfigFilename), b, os.ModePerm)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *ConfigLoader) readConfig() (*CVConfig, error) {
-	configdir := filepath.Join(c.userHomeDir, c.cvConfigDir)
+// ReadConfig parses the CredHub client config file
+func (c *ConfigLoader) ReadConfig() (*CVConfig, error) {
+	configdir := filepath.Join(c.UserHomeDir, c.CVConfigDir)
 	if _, err := os.Stat(configdir); os.IsNotExist(err) {
 		return nil, fmt.Errorf("no config dir %s %s", configdir, err)
 	}
 
 	cvConfig := CVConfig{}
-	file, err := ioutil.ReadFile(path.Join(configdir, c.configFilename))
+	file, err := ioutil.ReadFile(path.Join(configdir, c.ConfigFilename))
 	if err != nil {
 		return nil, err
 	}
@@ -98,35 +99,37 @@ type CVConfig struct {
 
 // ICredhubProxy defines the interface for the proxy to communicate with Credhub
 type ICredhubProxy interface {
-	generateCertificate(name string, parameters generate.Certificate, overwrite credhub.Mode) (credentials.Certificate, error)
-	putCertificate(certName string, ca string, certificate string, privateKey string) error
-	deleteCert(name string) error
-	list() ([]credentials.CertificateMetadata, error)
-	getCertificate(name string) (credentials.Certificate, error)
+	GenerateCertificate(name string, parameters generate.Certificate, overwrite credhub.Mode) (credentials.Certificate, error)
+	PutCertificate(certName string, ca string, certificate string, privateKey string) error
+	DeleteCert(name string) error
+	List() ([]credentials.CertificateMetadata, error)
+	GetCertificate(name string) (credentials.Certificate, error)
 }
 
 // CredhubProxy contains the config information for the Credhub request proxy
 type CredhubProxy struct {
-	baseURL           string
-	username          string
-	password          string
-	clientID          string
-	clientSecret      string
-	accessToken       string
-	refreshToken      string
-	authURL           string
+	BaseURL           string
+	Username          string
+	Password          string
+	ClientID          string
+	ClientSecret      string
+	AccessToken       string
+	RefreshToken      string
+	AuthURL           string
 	client            *credhub.CredHub
-	configPath        string
-	skipTLSValidation bool
+	ConfigPath        string
+	SkipTLSValidation bool
 }
 
-func (cp *CredhubProxy) generateCertificate(name string, parameters generate.Certificate, overwrite credhub.Mode) (credentials.Certificate, error) {
+// GenerateCertificate generates a certificate in CredHub
+func (cp *CredhubProxy) GenerateCertificate(name string, parameters generate.Certificate, overwrite credhub.Mode) (credentials.Certificate, error) {
 	newCert, err := cp.client.GenerateCertificate(name, parameters, overwrite)
 	output.Verbose("newCert %+v", newCert)
 	return newCert, err
 }
 
-func (cp *CredhubProxy) putCertificate(certName string, ca string, certificate string, privateKey string) error {
+// PutCertificate uploads a certificate to CredHub
+func (cp *CredhubProxy) PutCertificate(certName string, ca string, certificate string, privateKey string) error {
 	c := values.Certificate{}
 	c.Ca = ca
 	c.Certificate = certificate
@@ -139,11 +142,13 @@ func (cp *CredhubProxy) putCertificate(certName string, ca string, certificate s
 	return nil
 }
 
-func (cp *CredhubProxy) deleteCert(name string) error {
+// DeleteCert deletes a certificate from CredHub
+func (cp *CredhubProxy) DeleteCert(name string) error {
 	return cp.client.Delete(name)
 }
 
-func (cp *CredhubProxy) list() ([]credentials.CertificateMetadata, error) {
+// List lists certificates on CredHub
+func (cp *CredhubProxy) List() ([]credentials.CertificateMetadata, error) {
 	certs, err := cp.client.GetAllCertificatesMetadata()
 	if err != nil {
 		return nil, err
@@ -152,7 +157,8 @@ func (cp *CredhubProxy) list() ([]credentials.CertificateMetadata, error) {
 	return certs, nil
 }
 
-func (cp *CredhubProxy) getCertificate(name string) (credentials.Certificate, error) {
+// GetCertificate downloads a certificate from CredHub
+func (cp *CredhubProxy) GetCertificate(name string) (credentials.Certificate, error) {
 	cred, err := cp.client.GetLatestCertificate(name)
 	if err != nil {
 		return credentials.Certificate{}, err
@@ -160,7 +166,8 @@ func (cp *CredhubProxy) getCertificate(name string) (credentials.Certificate, er
 	return cred, nil
 }
 
-func getThumbprint(cert string) ([sha1.Size]byte, error) {
+// GetThumbprint calculates the thumbprint of a certificate in CredHub
+func GetThumbprint(cert string) ([sha1.Size]byte, error) {
 	certStr := strings.ReplaceAll(cert, "-----BEGIN CERTIFICATE-----", "")
 	certStr = strings.ReplaceAll(certStr, "-----END CERTIFICATE-----", "")
 	certStr = strings.ReplaceAll(certStr, "\n", "")
@@ -173,14 +180,14 @@ func getThumbprint(cert string) ([sha1.Size]byte, error) {
 	return sha1.Sum(data), nil
 }
 
-func (cp *CredhubProxy) writeConfig(configPath string, config *CVConfig) error {
+func (cp *CredhubProxy) writeConfig(ConfigPath string, config *CVConfig) error {
 	// ensure the .cv directory is created
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return err
 	}
 
-	homedir := filepath.Join(home, cp.configPath)
+	homedir := filepath.Join(home, cp.ConfigPath)
 	if _, err := os.Stat(homedir); os.IsNotExist(err) {
 		os.Mkdir(homedir, os.ModePerm)
 	}
@@ -201,53 +208,55 @@ func (cp *CredhubProxy) writeConfig(configPath string, config *CVConfig) error {
 	return nil
 }
 
-func (cp *CredhubProxy) authExisting() error {
+// AuthExisting authenticates an existing CredHub client
+func (cp *CredhubProxy) AuthExisting() error {
 	var err error
-	cp.client, err = credhub.New(cp.baseURL,
-		credhub.SkipTLSValidation(cp.skipTLSValidation),
+	cp.client, err = credhub.New(cp.BaseURL,
+		credhub.SkipTLSValidation(cp.SkipTLSValidation),
 		credhub.Auth(auth.Uaa(
-			cp.clientID,
-			cp.clientSecret,
-			cp.username,
-			cp.password,
-			cp.accessToken,
-			cp.refreshToken,
+			cp.ClientID,
+			cp.ClientSecret,
+			cp.Username,
+			cp.Password,
+			cp.AccessToken,
+			cp.RefreshToken,
 			false,
 		)),
-		credhub.AuthURL(cp.authURL),
+		credhub.AuthURL(cp.AuthURL),
 	)
 
 	return err
 }
 
-func (cp *CredhubProxy) auth() error {
-	ch, err := credhub.New(cp.baseURL,
-		credhub.SkipTLSValidation(cp.skipTLSValidation),
-		credhub.Auth(auth.UaaPassword(cp.clientID, cp.clientSecret, cp.username, cp.password)))
+// Auth authenticates a new CredHub client
+func (cp *CredhubProxy) Auth() error {
+	ch, err := credhub.New(cp.BaseURL,
+		credhub.SkipTLSValidation(cp.SkipTLSValidation),
+		credhub.Auth(auth.UaaPassword(cp.ClientID, cp.ClientSecret, cp.Username, cp.Password)))
 	if err != nil {
 		return err
 	}
-	authURL, err := ch.AuthURL()
+	AuthURL, err := ch.AuthURL()
 	if err != nil {
 		return err
 	}
 
 	uaaClient := uaa.Client{
-		AuthURL: authURL,
+		AuthURL: AuthURL,
 		Client:  ch.Client(),
 	}
 
-	if cp.clientID != "" {
-		cp.accessToken, err = uaaClient.ClientCredentialGrant(cp.clientID, cp.clientSecret)
+	if cp.ClientID != "" {
+		cp.AccessToken, err = uaaClient.ClientCredentialGrant(cp.ClientID, cp.ClientSecret)
 		if err != nil {
 			return err
 		}
 	} else {
-		if cp.clientID == "" {
+		if cp.ClientID == "" {
 			// default value to be used
-			cp.clientID = "credhub_cli"
+			cp.ClientID = "credhub_cli"
 		}
-		cp.accessToken, cp.refreshToken, err = uaaClient.PasswordGrant(cp.clientID, cp.clientSecret, cp.username, cp.password)
+		cp.AccessToken, cp.RefreshToken, err = uaaClient.PasswordGrant(cp.ClientID, cp.ClientSecret, cp.Username, cp.Password)
 		if err != nil {
 			return err
 		}
@@ -259,7 +268,7 @@ func (cp *CredhubProxy) auth() error {
 		return err
 	}
 
-	homedir := filepath.Join(home, cp.configPath)
+	homedir := filepath.Join(home, cp.ConfigPath)
 	if _, err := os.Stat(homedir); os.IsNotExist(err) {
 		os.Mkdir(homedir, os.ModePerm)
 	}
@@ -271,7 +280,7 @@ func (cp *CredhubProxy) auth() error {
 	// write out the config file with the access token and refresh
 	// write out as json for now
 	// our config will just be a struct for now
-	cvConfig := CVConfig{AccessToken: cp.accessToken, RefreshToken: cp.refreshToken, CredhubBaseURL: cp.baseURL, AuthURL: authURL, SkipTLSValidation: cp.skipTLSValidation}
+	cvConfig := CVConfig{AccessToken: cp.AccessToken, RefreshToken: cp.RefreshToken, CredhubBaseURL: cp.BaseURL, AuthURL: AuthURL, SkipTLSValidation: cp.SkipTLSValidation}
 
 	b, err := json.Marshal(&cvConfig)
 	if err != nil {
@@ -283,15 +292,15 @@ func (cp *CredhubProxy) auth() error {
 		return err
 	}
 
-	cp.client, err = credhub.New(cp.baseURL,
-		credhub.SkipTLSValidation(cp.skipTLSValidation),
+	cp.client, err = credhub.New(cp.BaseURL,
+		credhub.SkipTLSValidation(cp.SkipTLSValidation),
 		credhub.Auth(auth.Uaa(
-			cp.clientID,
-			cp.clientSecret,
-			cp.username,
-			cp.password,
-			cp.accessToken,
-			cp.refreshToken,
+			cp.ClientID,
+			cp.ClientSecret,
+			cp.Username,
+			cp.Password,
+			cp.AccessToken,
+			cp.RefreshToken,
 			false,
 		)),
 	)

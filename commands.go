@@ -24,6 +24,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/newcontext-oss/credhub-venafi/chclient"
 	"github.com/newcontext-oss/credhub-venafi/config"
 	"github.com/newcontext-oss/credhub-venafi/output"
 
@@ -114,12 +115,12 @@ func (v *ListCommand) execute() error {
 		return err
 	}
 
-	configLoader := ConfigLoader{
-		userHomeDir:    userHomeDir,
-		cvConfigDir:    ".cv",
-		configFilename: "config.json",
+	configLoader := chclient.ConfigLoader{
+		UserHomeDir:    userHomeDir,
+		CVConfigDir:    ".cv",
+		ConfigFilename: "config.json",
 	}
-	config, err := configLoader.readConfig()
+	config, err := configLoader.ReadConfig()
 	if err != nil {
 		return err
 	}
@@ -128,15 +129,15 @@ func (v *ListCommand) execute() error {
 		v.VenafiRoot = prependPolicyRoot(configYAML.VcertZone)
 	}
 
-	cp := &CredhubProxy{
-		baseURL:           config.CredhubBaseURL,
-		accessToken:       config.AccessToken,
-		refreshToken:      config.RefreshToken,
-		authURL:           config.AuthURL,
-		skipTLSValidation: config.SkipTLSValidation,
-		clientID:          configYAML.ClientID,
-		clientSecret:      configYAML.ClientSecret,
-		configPath:        ".cv",
+	cp := &chclient.CredhubProxy{
+		BaseURL:           config.CredhubBaseURL,
+		AccessToken:       config.AccessToken,
+		RefreshToken:      config.RefreshToken,
+		AuthURL:           config.AuthURL,
+		SkipTLSValidation: config.SkipTLSValidation,
+		ClientID:          configYAML.ClientID,
+		ClientSecret:      configYAML.ClientSecret,
+		ConfigPath:        ".cv",
 	}
 
 	cv := CV{
@@ -151,7 +152,7 @@ func (v *ListCommand) execute() error {
 		},
 	}
 
-	err = cp.authExisting()
+	err = cp.AuthExisting()
 	if err != nil {
 		return err
 	}
@@ -180,7 +181,7 @@ type GenerateAndStoreCommand struct {
 	SANEmail           emailSlice                // v
 	SANIP              ipSlice                   // v
 	KeyPassword        string                    // v
-	AuthConfig         CVConfig                  // v
+	AuthConfig         chclient.CVConfig         // v
 
 	// -n, --name=              Name of the credential to generate
 	// Name string // c
@@ -293,25 +294,25 @@ func (v *GenerateAndStoreCommand) execute() error {
 		return err
 	}
 
-	configLoader := ConfigLoader{
-		userHomeDir:    userHomeDir,
-		cvConfigDir:    ".cv",
-		configFilename: "config.json",
+	configLoader := chclient.ConfigLoader{
+		UserHomeDir:    userHomeDir,
+		CVConfigDir:    ".cv",
+		ConfigFilename: "config.json",
 	}
-	config, err := configLoader.readConfig()
+	config, err := configLoader.ReadConfig()
 	if err != nil {
 		return err
 	}
 
-	cp := &CredhubProxy{
-		baseURL:           config.CredhubBaseURL,
-		accessToken:       config.AccessToken,
-		refreshToken:      config.RefreshToken,
-		authURL:           config.AuthURL,
-		skipTLSValidation: config.SkipTLSValidation,
-		clientID:          configYAML.ClientID,
-		clientSecret:      configYAML.ClientSecret,
-		configPath:        ".cv",
+	cp := &chclient.CredhubProxy{
+		BaseURL:           config.CredhubBaseURL,
+		AccessToken:       config.AccessToken,
+		RefreshToken:      config.RefreshToken,
+		AuthURL:           config.AuthURL,
+		SkipTLSValidation: config.SkipTLSValidation,
+		ClientID:          configYAML.ClientID,
+		ClientSecret:      configYAML.ClientSecret,
+		ConfigPath:        ".cv",
 	}
 
 	cv := CV{
@@ -325,7 +326,7 @@ func (v *GenerateAndStoreCommand) execute() error {
 			connectorType: configYAML.ConnectorType,
 		},
 	}
-	err = cp.authExisting()
+	err = cp.AuthExisting()
 	if err != nil {
 		return err
 	}
@@ -412,16 +413,16 @@ func (v *LoginCommand) prepFlags() {
 }
 
 func (v *LoginCommand) execute() error {
-	cp := &CredhubProxy{
-		baseURL:           v.CredhubBaseURL,
-		username:          v.Username,
-		password:          v.Password,
-		clientID:          v.ClientID,
-		clientSecret:      v.ClientSecret,
-		skipTLSValidation: v.SkipTLSValidation,
-		configPath:        ".cv",
+	cp := &chclient.CredhubProxy{
+		BaseURL:           v.CredhubBaseURL,
+		Username:          v.Username,
+		Password:          v.Password,
+		ClientID:          v.ClientID,
+		ClientSecret:      v.ClientSecret,
+		SkipTLSValidation: v.SkipTLSValidation,
+		ConfigPath:        ".cv",
 	}
-	err := cp.auth()
+	err := cp.Auth()
 	if err == nil {
 		output.Status("Login Successful\n")
 	}
@@ -480,25 +481,25 @@ func (v *DeleteCommand) execute() error {
 		return err
 	}
 
-	configLoader := ConfigLoader{
-		userHomeDir:    userHomeDir,
-		cvConfigDir:    ".cv",
-		configFilename: "config.json",
+	configLoader := chclient.ConfigLoader{
+		UserHomeDir:    userHomeDir,
+		CVConfigDir:    ".cv",
+		ConfigFilename: "config.json",
 	}
-	config, err := configLoader.readConfig()
+	config, err := configLoader.ReadConfig()
 	if err != nil {
 		return err
 	}
 
-	cp := &CredhubProxy{
-		baseURL:           config.CredhubBaseURL,
-		accessToken:       config.AccessToken,
-		refreshToken:      config.RefreshToken,
-		authURL:           config.AuthURL,
-		skipTLSValidation: config.SkipTLSValidation,
-		clientID:          configYAML.ClientID,
-		clientSecret:      configYAML.ClientSecret,
-		configPath:        ".cv",
+	cp := &chclient.CredhubProxy{
+		BaseURL:           config.CredhubBaseURL,
+		AccessToken:       config.AccessToken,
+		RefreshToken:      config.RefreshToken,
+		AuthURL:           config.AuthURL,
+		SkipTLSValidation: config.SkipTLSValidation,
+		ClientID:          configYAML.ClientID,
+		ClientSecret:      configYAML.ClientSecret,
+		ConfigPath:        ".cv",
 	}
 
 	cv := CV{
@@ -513,7 +514,7 @@ func (v *DeleteCommand) execute() error {
 		},
 	}
 
-	err = cp.authExisting()
+	err = cp.AuthExisting()
 	if err != nil {
 		return err
 	}

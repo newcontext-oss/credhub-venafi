@@ -25,6 +25,7 @@ import (
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials"
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials/values"
 	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/newcontext-oss/credhub-venafi/chclient"
 	"github.com/newcontext-oss/credhub-venafi/output"
 )
 
@@ -419,7 +420,7 @@ func TestJoinRoot(t *testing.T) {
 }
 
 type CredhubProxyMock struct {
-	CredhubProxy
+	chclient.CredhubProxy
 	returnlist []credentials.CertificateMetadata
 }
 
