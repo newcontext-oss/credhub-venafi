@@ -22,7 +22,9 @@ import (
 	"strings"
 	"testing"
 
+	"code.cloudfoundry.org/credhub-cli/credhub"
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials"
+	"code.cloudfoundry.org/credhub-cli/credhub/credentials/generate"
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials/values"
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/newcontext-oss/credhub-venafi/chclient"
@@ -420,12 +422,25 @@ func TestJoinRoot(t *testing.T) {
 }
 
 type CredhubProxyMock struct {
-	chclient.CredhubProxy
-	returnlist []credentials.CertificateMetadata
+	CredhubProxy chclient.CredhubProxy
+	returnlist   []credentials.CertificateMetadata
 }
 
-func (cp *CredhubProxyMock) list() ([]credentials.CertificateMetadata, error) {
+// Need all of the methods for the Interface
+func (cp *CredhubProxyMock) List() ([]credentials.CertificateMetadata, error) {
 	return cp.returnlist, nil
+}
+func (cp *CredhubProxyMock) DeleteCert(name string) error {
+	return nil
+}
+func (cp *CredhubProxyMock) GenerateCertificate(name string, parameters generate.Certificate, overwrite credhub.Mode) (credentials.Certificate, error) {
+	return credentials.Certificate{}, nil
+}
+func (cp *CredhubProxyMock) GetCertificate(name string) (credentials.Certificate, error) {
+	return credentials.Certificate{}, nil
+}
+func (cp *CredhubProxyMock) PutCertificate(name string, ca string, certificate string, privateKey string) error {
+	return nil
 }
 
 type VcertProxyMock struct {
