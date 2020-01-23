@@ -1,4 +1,4 @@
-// Copyright 2019 New Context, Inc.
+// Copyright 2020 New Context, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -116,14 +116,14 @@ type CredhubProxy struct {
 	AccessToken       string
 	RefreshToken      string
 	AuthURL           string
-	client            *credhub.CredHub
+	Client            *credhub.CredHub
 	ConfigPath        string
 	SkipTLSValidation bool
 }
 
 // GenerateCertificate generates a certificate in CredHub
 func (cp *CredhubProxy) GenerateCertificate(name string, parameters generate.Certificate, overwrite credhub.Mode) (credentials.Certificate, error) {
-	newCert, err := cp.client.GenerateCertificate(name, parameters, overwrite)
+	newCert, err := cp.Client.GenerateCertificate(name, parameters, overwrite)
 	output.Verbose("newCert %+v", newCert)
 	return newCert, err
 }
@@ -134,7 +134,7 @@ func (cp *CredhubProxy) PutCertificate(certName string, ca string, certificate s
 	c.Ca = ca
 	c.Certificate = certificate
 	c.PrivateKey = privateKey
-	newCert, err := cp.client.SetCertificate(certName, c)
+	newCert, err := cp.Client.SetCertificate(certName, c)
 	_ = newCert
 	if err != nil {
 		return nil
@@ -144,12 +144,12 @@ func (cp *CredhubProxy) PutCertificate(certName string, ca string, certificate s
 
 // DeleteCert deletes a certificate from CredHub
 func (cp *CredhubProxy) DeleteCert(name string) error {
-	return cp.client.Delete(name)
+	return cp.Client.Delete(name)
 }
 
 // List lists certificates on CredHub
 func (cp *CredhubProxy) List() ([]credentials.CertificateMetadata, error) {
-	certs, err := cp.client.GetAllCertificatesMetadata()
+	certs, err := cp.Client.GetAllCertificatesMetadata()
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +159,7 @@ func (cp *CredhubProxy) List() ([]credentials.CertificateMetadata, error) {
 
 // GetCertificate downloads a certificate from CredHub
 func (cp *CredhubProxy) GetCertificate(name string) (credentials.Certificate, error) {
-	cred, err := cp.client.GetLatestCertificate(name)
+	cred, err := cp.Client.GetLatestCertificate(name)
 	if err != nil {
 		return credentials.Certificate{}, err
 	}
@@ -211,7 +211,7 @@ func (cp *CredhubProxy) writeConfig(ConfigPath string, config *CVConfig) error {
 // AuthExisting authenticates an existing CredHub client
 func (cp *CredhubProxy) AuthExisting() error {
 	var err error
-	cp.client, err = credhub.New(cp.BaseURL,
+	cp.Client, err = credhub.New(cp.BaseURL,
 		credhub.SkipTLSValidation(cp.SkipTLSValidation),
 		credhub.Auth(auth.Uaa(
 			cp.ClientID,
@@ -292,7 +292,7 @@ func (cp *CredhubProxy) Auth() error {
 		return err
 	}
 
-	cp.client, err = credhub.New(cp.BaseURL,
+	cp.Client, err = credhub.New(cp.BaseURL,
 		credhub.SkipTLSValidation(cp.SkipTLSValidation),
 		credhub.Auth(auth.Uaa(
 			cp.ClientID,
