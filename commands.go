@@ -27,6 +27,7 @@ import (
 	"github.com/newcontext-oss/credhub-venafi/chclient"
 	"github.com/newcontext-oss/credhub-venafi/config"
 	"github.com/newcontext-oss/credhub-venafi/output"
+	"github.com/newcontext-oss/credhub-venafi/vcclient"
 
 	"github.com/Venafi/vcert/pkg/certificate"
 )
@@ -127,7 +128,7 @@ func (v *ListCommand) execute() error {
 	}
 
 	if v.VenafiRoot == "" && configYAML.VcertZone != "" {
-		v.VenafiRoot = prependPolicyRoot(configYAML.VcertZone)
+		v.VenafiRoot = vcclient.PrependPolicyRoot(configYAML.VcertZone)
 	}
 
 	cp := &chclient.CredhubProxy{
@@ -144,12 +145,12 @@ func (v *ListCommand) execute() error {
 	cv := CV{
 		configLoader: configLoader,
 		credhub:      cp,
-		vcert: &VcertProxy{
-			username:      configYAML.VcertUsername,
-			password:      configYAML.VcertPassword,
-			zone:          configYAML.VcertZone,
-			baseURL:       configYAML.VcertBaseURL,
-			connectorType: configYAML.ConnectorType,
+		vcert: &vcclient.VcertProxy{
+			Username:      configYAML.VcertUsername,
+			Password:      configYAML.VcertPassword,
+			Zone:          configYAML.VcertZone,
+			BaseURL:       configYAML.VcertBaseURL,
+			ConnectorType: configYAML.ConnectorType,
 		},
 	}
 
@@ -158,7 +159,7 @@ func (v *ListCommand) execute() error {
 		return err
 	}
 
-	err = cv.vcert.login()
+	err = cv.vcert.Login()
 	if err != nil {
 		return err
 	}
@@ -319,12 +320,12 @@ func (v *GenerateAndStoreCommand) execute() error {
 	cv := CV{
 		configLoader: configLoader,
 		credhub:      cp,
-		vcert: &VcertProxy{
-			username:      configYAML.VcertUsername,
-			password:      configYAML.VcertPassword,
-			zone:          configYAML.VcertZone,
-			baseURL:       configYAML.VcertBaseURL,
-			connectorType: configYAML.ConnectorType,
+		vcert: &vcclient.VcertProxy{
+			Username:      configYAML.VcertUsername,
+			Password:      configYAML.VcertPassword,
+			Zone:          configYAML.VcertZone,
+			BaseURL:       configYAML.VcertBaseURL,
+			ConnectorType: configYAML.ConnectorType,
 		},
 	}
 	err = cp.AuthExisting()
@@ -332,7 +333,7 @@ func (v *GenerateAndStoreCommand) execute() error {
 		return err
 	}
 
-	err = cv.vcert.login()
+	err = cv.vcert.Login()
 	if err != nil {
 		return err
 	}
@@ -506,12 +507,12 @@ func (v *DeleteCommand) execute() error {
 	cv := CV{
 		configLoader: configLoader,
 		credhub:      cp,
-		vcert: &VcertProxy{
-			username:      configYAML.VcertUsername,
-			password:      configYAML.VcertPassword,
-			zone:          configYAML.VcertZone,
-			baseURL:       configYAML.VcertBaseURL,
-			connectorType: configYAML.ConnectorType,
+		vcert: &vcclient.VcertProxy{
+			Username:      configYAML.VcertUsername,
+			Password:      configYAML.VcertPassword,
+			Zone:          configYAML.VcertZone,
+			BaseURL:       configYAML.VcertBaseURL,
+			ConnectorType: configYAML.ConnectorType,
 		},
 	}
 
@@ -520,7 +521,7 @@ func (v *DeleteCommand) execute() error {
 		return err
 	}
 
-	err = cv.vcert.login()
+	err = cv.vcert.Login()
 	if err != nil {
 		return err
 	}

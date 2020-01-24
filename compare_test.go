@@ -29,6 +29,7 @@ import (
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/newcontext-oss/credhub-venafi/chclient"
 	"github.com/newcontext-oss/credhub-venafi/output"
+	"github.com/newcontext-oss/credhub-venafi/vcclient"
 )
 
 func TestCmpMethod(t *testing.T) {
@@ -444,12 +445,27 @@ func (cp *CredhubProxyMock) PutCertificate(name string, ca string, certificate s
 }
 
 type VcertProxyMock struct {
-	VcertProxy
-	retCerts []certificate.CertificateInfo
+	VcertProxy vcclient.VcertProxy
+	retCerts   []certificate.CertificateInfo
 }
 
-func (v *VcertProxyMock) list(vlimit int, zone string) ([]certificate.CertificateInfo, error) {
+func (v *VcertProxyMock) List(vlimit int, zone string) ([]certificate.CertificateInfo, error) {
 	return v.retCerts, nil
+}
+func (v *VcertProxyMock) Revoke(thumbprint string) error {
+	return nil
+}
+func (v *VcertProxyMock) Generate(args *vcclient.CertArgs) (*certificate.PEMCollection, error) {
+	return &certificate.PEMCollection{}, nil
+}
+func (v *VcertProxyMock) RetrieveCertificateByThumbprint(thumbprint string) (*certificate.PEMCollection, error) {
+	return &certificate.PEMCollection{}, nil
+}
+func (v *VcertProxyMock) PutCertificate(certName string, cert string, privateKey string) error {
+	return nil
+}
+func (v *VcertProxyMock) Login() error {
+	return nil
 }
 
 func TestCVListBoth(t *testing.T) {
