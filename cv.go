@@ -27,6 +27,7 @@ import (
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials"
 	"code.cloudfoundry.org/credhub-cli/credhub/credentials/generate"
 	"github.com/Venafi/vcert/pkg/certificate"
+	"github.com/newcontext-oss/credhub-venafi/chclient"
 	"github.com/newcontext-oss/credhub-venafi/output"
 )
 
@@ -37,8 +38,8 @@ var ConfigFile = ".cv.conf"
 type CV struct {
 	configPath   string
 	vcert        IVcertProxy
-	credhub      ICredhubProxy
-	configLoader ConfigLoader
+	credhub      chclient.ICredhubProxy
+	configLoader chclient.ConfigLoader
 }
 
 func (c *CV) generateAndStoreCredhub(name string, v *GenerateAndStoreCommand, store bool) error {
@@ -65,7 +66,7 @@ func (c *CV) generateAndStoreCredhub(name string, v *GenerateAndStoreCommand, st
 	}
 
 	output.Status("NOW GENERATING ON CREDHUB '%s'\n", name)
-	certificate, err := c.credhub.generateCertificate(name, parameters, credhub.NoOverwrite)
+	certificate, err := c.credhub.GenerateCertificate(name, parameters, credhub.NoOverwrite)
 	if err != nil {
 		return err
 	}
@@ -100,16 +101,16 @@ func (c *CV) generateAndStore(name string, args *GenerateAndStoreCommand, store 
 	ca := ""
 	certificate := cert.Certificate
 	privateKey := cert.PrivateKey
-	return c.credhub.putCertificate(certName, ca, certificate, privateKey)
+	return c.credhub.PutCertificate(certName, ca, certificate, privateKey)
 }
 
 func (c *CV) deleteCert(name string) error {
-	cert, err := c.credhub.getCertificate(name)
+	cert, err := c.credhub.GetCertificate(name)
 	if err != nil {
 		return err
 	}
 	certStr := cert.Value.Certificate
-	tp, err := getThumbprint(certStr)
+	tp, err := chclient.GetThumbprint(certStr)
 	if err != nil {
 		return err
 	}
@@ -122,7 +123,7 @@ func (c *CV) deleteCert(name string) error {
 	}
 
 	output.Status("NOW DELETING FROM CREDHUB '%s'\n", name)
-	return c.credhub.deleteCert(name)
+	return c.credhub.DeleteCert(name)
 }
 
 func (c *CV) listBoth(args *ListCommand) ([]CertCompareData, error) {
@@ -133,7 +134,7 @@ func (c *CV) listBoth(args *ListCommand) ([]CertCompareData, error) {
 		return []CertCompareData{}, err
 	}
 
-	items, err := c.credhub.list()
+	items, err := c.credhub.List()
 	if err != nil {
 		return []CertCompareData{}, err
 	}
@@ -148,7 +149,7 @@ func (c *CV) listBoth(args *ListCommand) ([]CertCompareData, error) {
 	var ct ComparisonStrategy
 	switch {
 	case args.ByThumbprint:
-		ct = &ThumbprintStrategy{getCertificate: c.credhub.getCertificate}
+		ct = &ThumbprintStrategy{getCertificate: c.credhub.GetCertificate}
 	case args.ByPath:
 		ct = &PathStrategy{leftPrefix: joinRoot(args.VenafiRoot, args.VenafiPrefix, "\\"), rightPrefix: joinRoot(args.CredhubRoot, args.CredhubPrefix, "/")}
 	default:
@@ -424,7 +425,7 @@ func (t *ThumbprintStrategy) rightGet(r credentials.CertificateMetadata) string 
 
 	// then, from the cert we calculate the thumbprint
 	certStr := cert.Value.Certificate
-	tp, err := getThumbprint(certStr)
+	tp, err := chclient.GetThumbprint(certStr)
 	if err != nil {
 		t.errors = append(t.errors, err)
 	}
