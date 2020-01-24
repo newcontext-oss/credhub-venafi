@@ -16,9 +16,7 @@ package main
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"regexp"
 	"sort"
 	"strings"
@@ -37,7 +35,6 @@ var ConfigFile = ".cv.conf"
 
 // CV represents an object that manipulates both credhub and vcert
 type CV struct {
-	configPath   string
 	credhub      chclient.ICredhubProxy
 	configLoader chclient.ConfigLoader
 	vcert        vcclient.IVcertProxy
@@ -198,15 +195,6 @@ func printCerts(data []CertCompareData) {
 	for i, d := range data {
 		output.Verbose("%d %+v\n", i, d)
 	}
-}
-
-func jsonMarshallToFile(data interface{}, filename string) error {
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(filename, bytes, 0644)
 }
 
 // ComparisonStrategy defines the interface for comparing credentials
@@ -414,7 +402,6 @@ func (t *CommonNameStrategy) values(l *certificate.CertificateInfo, r *credentia
 // ThumbprintStrategy handles cert thumbprints
 type ThumbprintStrategy struct {
 	leftPrefix      string
-	rightPrefix     string
 	getCertificate  func(name string) (credentials.Certificate, error)
 	thumbprintCache map[string]string
 	errors          []error
