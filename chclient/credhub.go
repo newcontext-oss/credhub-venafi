@@ -41,33 +41,6 @@ type ConfigLoader struct {
 	ConfigFilename string
 }
 
-func (c *ConfigLoader) ensureDirExists() error {
-	homedir := filepath.Join(c.UserHomeDir, c.CVConfigDir)
-	if _, err := os.Stat(homedir); os.IsNotExist(err) {
-		err := os.Mkdir(homedir, os.ModePerm)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (c *ConfigLoader) writeConfig(cvConfig *CVConfig) error {
-	homedir := filepath.Join(c.UserHomeDir, c.CVConfigDir)
-
-	b, err := json.Marshal(&cvConfig)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(filepath.Join(homedir, c.ConfigFilename), b, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 // ReadConfig parses the CredHub client config file
 func (c *ConfigLoader) ReadConfig() (*CVConfig, error) {
 	configdir := filepath.Join(c.UserHomeDir, c.CVConfigDir)
@@ -178,34 +151,6 @@ func GetThumbprint(cert string) ([sha1.Size]byte, error) {
 	}
 
 	return sha1.Sum(data), nil
-}
-
-func (cp *CredhubProxy) writeConfig(ConfigPath string, config *CVConfig) error {
-	// ensure the .cv directory is created
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return err
-	}
-
-	homedir := filepath.Join(home, cp.ConfigPath)
-	if _, err := os.Stat(homedir); os.IsNotExist(err) {
-		os.Mkdir(homedir, os.ModePerm)
-	}
-
-	if err != nil {
-		return err
-	}
-
-	b, err := json.Marshal(&config)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(filepath.Join(homedir, "config.json"), b, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // AuthExisting authenticates an existing CredHub client
