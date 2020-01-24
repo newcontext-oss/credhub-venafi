@@ -15,7 +15,6 @@
 package vcclient
 
 import (
-	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
 	"strings"
@@ -34,7 +33,7 @@ type IVcertProxy interface {
 	RetrieveCertificateByThumbprint(thumprint string) (*certificate.PEMCollection, error)
 	Login() error
 	Revoke(thumbprint string) error
-	Generate(args *GenerateAndStoreCommand) (*certificate.PEMCollection, error)
+	Generate(args *CertArgs) (*certificate.PEMCollection, error)
 }
 
 // VcertProxy contains the necessary config information for a vcert proxy
@@ -139,71 +138,6 @@ func (v *VcertProxy) Revoke(thumbprint string) error {
 
 	output.Verbose("Successfully submitted revocation request for thumbprint %s", thumbprint)
 	return nil
-}
-
-// Generate generates a certificate in vcert
-func (v *VcertProxy) Generate(args *GenerateAndStoreCommand) (*certificate.PEMCollection, error) {
-	req, err := buildGenerateRequest(args)
-	if err != nil {
-		return nil, err
-	}
-
-	requestID, privateKey, err := sendCertificateRequest(v.Client, req)
-	if err != nil {
-		return nil, err
-	}
-
-	pickupReq := &certificate.Request{
-		PickupID: requestID,
-		Timeout:  180 * time.Second,
-	}
-
-	pcc, err := v.Client.RetrieveCertificate(pickupReq)
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve certificate using requestId %s: %s", requestID, err)
-	}
-	pcc.PrivateKey = privateKey
-	return pcc, nil
-}
-
-func buildGenerateRequest(v *GenerateAndStoreCommand) (*certificate.Request, error) {
-	r := &certificate.Request{}
-	r.FriendlyName = v.Name
-
-	subject := pkix.Name{}
-	if v.CommonName != "" {
-		subject.CommonName = v.CommonName
-	}
-	if v.OrganizationName != "" {
-		subject.Organization = []string{v.OrganizationName}
-	}
-	if len(v.SANDNS) != 0 {
-		r.DNSNames = v.SANDNS
-	}
-	r.KeyCurve = v.KeyCurve
-	if len(v.OrganizationalUnit) > 0 {
-		subject.OrganizationalUnit = v.OrganizationalUnit
-	}
-	if v.Country != "" {
-		subject.Country = []string{v.Country}
-	}
-	if v.State != "" {
-		subject.Province = []string{v.State}
-	}
-	if v.Locality != "" {
-		subject.Locality = []string{v.Locality}
-	}
-	if len(v.SANEmail) > 0 {
-		r.EmailAddresses = v.SANEmail
-	}
-	if len(v.SANIP) > 0 {
-		r.IPAddresses = v.SANIP
-	}
-	if v.KeyPassword == "" {
-		r.KeyPassword = v.KeyPassword
-	}
-	r.Subject = subject
-	return r, nil
 }
 
 func sendCertificateRequest(c endpoint.Connector, enrollReq *certificate.Request) (requestID string, privateKey string, err error) {
