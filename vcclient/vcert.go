@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package vcclient
 
 import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Venafi/vcert"
@@ -28,25 +29,26 @@ import (
 
 // IVcertProxy defines the interface for proxies that manage requests to vcert
 type IVcertProxy interface {
-	putCertificate(certName string, cert string, privateKey string) error
-	list(vlimit int, zone string) ([]certificate.CertificateInfo, error)
-	retrieveCertificateByThumbprint(thumprint string) (*certificate.PEMCollection, error)
-	login() error
-	revoke(thumbprint string) error
-	generate(args *GenerateAndStoreCommand) (*certificate.PEMCollection, error)
+	PutCertificate(certName string, cert string, privateKey string) error
+	List(vlimit int, zone string) ([]certificate.CertificateInfo, error)
+	RetrieveCertificateByThumbprint(thumprint string) (*certificate.PEMCollection, error)
+	Login() error
+	Revoke(thumbprint string) error
+	Generate(args *GenerateAndStoreCommand) (*certificate.PEMCollection, error)
 }
 
 // VcertProxy contains the necessary config information for a vcert proxy
 type VcertProxy struct {
-	username      string
-	password      string
-	zone          string
-	client        endpoint.Connector
-	baseURL       string
-	connectorType string
+	Username      string
+	Password      string
+	Zone          string
+	Client        endpoint.Connector
+	BaseURL       string
+	ConnectorType string
 }
 
-func (v *VcertProxy) putCertificate(certName string, cert string, privateKey string) error {
+// PutCertificate uploads a certificate to vcert
+func (v *VcertProxy) PutCertificate(certName string, cert string, privateKey string) error {
 	importReq := &certificate.ImportRequest{
 		// if PolicyDN is empty, it is taken from cfg.Zone
 		ObjectName:      certName,
@@ -56,7 +58,7 @@ func (v *VcertProxy) putCertificate(certName string, cert string, privateKey str
 		Reconcile: false,
 	}
 
-	importResp, err := v.client.ImportCertificate(importReq)
+	importResp, err := v.Client.ImportCertificate(importReq)
 	if err != nil {
 		return err
 	}
@@ -64,12 +66,13 @@ func (v *VcertProxy) putCertificate(certName string, cert string, privateKey str
 	return nil
 }
 
-func (v *VcertProxy) list(limit int, zone string) ([]certificate.CertificateInfo, error) {
+// List retrieves the list of certificates from vcert
+func (v *VcertProxy) List(limit int, zone string) ([]certificate.CertificateInfo, error) {
 	output.Info("vcert list from proxy")
 
-	v.client.SetZone(prependVEDRoot(zone))
+	v.Client.SetZone(prependVEDRoot(zone))
 	filter := endpoint.Filter{Limit: &limit, WithExpired: true}
-	certInfo, err := v.client.ListCertificates(filter)
+	certInfo, err := v.Client.ListCertificates(filter)
 	if err != nil {
 		return []certificate.CertificateInfo{}, err
 	}
@@ -80,44 +83,47 @@ func (v *VcertProxy) list(limit int, zone string) ([]certificate.CertificateInfo
 	return certInfo, nil
 }
 
-func (v *VcertProxy) retrieveCertificateByThumbprint(thumprint string) (*certificate.PEMCollection, error) {
+// RetrieveCertificateByThumbprint fetches a certificate from vcert by the thumbprint
+func (v *VcertProxy) RetrieveCertificateByThumbprint(thumprint string) (*certificate.PEMCollection, error) {
 	pickupReq := &certificate.Request{
 		Thumbprint: thumprint,
 		Timeout:    180 * time.Second,
 	}
 
-	return v.client.RetrieveCertificate(pickupReq)
+	return v.Client.RetrieveCertificate(pickupReq)
 }
 
-func (v *VcertProxy) login() error {
+// Login creates a session with the TPP server
+func (v *VcertProxy) Login() error {
 	auth := endpoint.Authentication{
-		User:     v.username,
-		Password: v.password,
+		User:     v.Username,
+		Password: v.Password,
 	}
 	var connectorType endpoint.ConnectorType
 
-	switch v.connectorType {
+	switch v.ConnectorType {
 	case "tpp":
 		connectorType = endpoint.ConnectorTypeTPP
 	default:
-		return fmt.Errorf("connector type '%s' not found", v.connectorType)
+		return fmt.Errorf("connector type '%s' not found", v.ConnectorType)
 	}
 	conf := vcert.Config{
 		Credentials:   &auth,
-		BaseUrl:       v.baseURL,
-		Zone:          v.zone,
+		BaseUrl:       v.BaseURL,
+		Zone:          v.Zone,
 		ConnectorType: connectorType,
 	}
 	c, err := vcert.NewClient(&conf)
 	if err != nil {
 		return fmt.Errorf("could not connect to endpoint: %s", err)
 	}
-	v.client = c
+	v.Client = c
 
 	return nil
 }
 
-func (v *VcertProxy) revoke(thumbprint string) error {
+// Revoke revokes a certificate in vcert (delete is not available via the api)
+func (v *VcertProxy) Revoke(thumbprint string) error {
 	revokeReq := &certificate.RevocationRequest{
 		// CertificateDN: requestID,
 		Thumbprint: thumbprint,
@@ -126,7 +132,7 @@ func (v *VcertProxy) revoke(thumbprint string) error {
 		Disable:    false,
 	}
 
-	err := v.client.RevokeCertificate(revokeReq)
+	err := v.Client.RevokeCertificate(revokeReq)
 	if err != nil {
 		return err
 	}
@@ -135,13 +141,14 @@ func (v *VcertProxy) revoke(thumbprint string) error {
 	return nil
 }
 
-func (v *VcertProxy) generate(args *GenerateAndStoreCommand) (*certificate.PEMCollection, error) {
+// Generate generates a certificate in vcert
+func (v *VcertProxy) Generate(args *GenerateAndStoreCommand) (*certificate.PEMCollection, error) {
 	req, err := buildGenerateRequest(args)
 	if err != nil {
 		return nil, err
 	}
 
-	requestID, privateKey, err := sendCertificateRequest(v.client, req)
+	requestID, privateKey, err := sendCertificateRequest(v.Client, req)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +158,7 @@ func (v *VcertProxy) generate(args *GenerateAndStoreCommand) (*certificate.PEMCo
 		Timeout:  180 * time.Second,
 	}
 
-	pcc, err := v.client.RetrieveCertificate(pickupReq)
+	pcc, err := v.Client.RetrieveCertificate(pickupReq)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve certificate using requestId %s: %s", requestID, err)
 	}
@@ -218,4 +225,17 @@ func sendCertificateRequest(c endpoint.Connector, enrollReq *certificate.Request
 
 	output.Verbose("Successfully submitted certificate request. Will pickup certificate by ID %s", requestID)
 	return requestID, privateKey, nil
+}
+
+// PrependPolicyRoot adds \Policy\ to the front of the zone string
+func PrependPolicyRoot(zone string) string {
+	zone = strings.TrimPrefix(zone, "\\")
+	zone = strings.TrimPrefix(zone, "Policy\\")
+	return prependVEDRoot("\\Policy\\" + zone)
+}
+
+func prependVEDRoot(zone string) string {
+	zone = strings.TrimPrefix(zone, "\\")
+	zone = strings.TrimPrefix(zone, "VED\\")
+	return "\\VED\\" + zone
 }
