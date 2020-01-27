@@ -16,9 +16,7 @@ package main
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"regexp"
 	"sort"
 	"strings"
@@ -29,6 +27,7 @@ import (
 	"github.com/Venafi/vcert/pkg/certificate"
 	"github.com/newcontext-oss/credhub-venafi/chclient"
 	"github.com/newcontext-oss/credhub-venafi/output"
+	"github.com/newcontext-oss/credhub-venafi/vcclient"
 )
 
 // ConfigFile is the configuration file name
@@ -36,10 +35,9 @@ var ConfigFile = ".cv.conf"
 
 // CV represents an object that manipulates both credhub and vcert
 type CV struct {
-	configPath   string
-	vcert        IVcertProxy
 	credhub      chclient.ICredhubProxy
 	configLoader chclient.ConfigLoader
+	vcert        vcclient.IVcertProxy
 }
 
 func (c *CV) generateAndStoreCredhub(name string, v *GenerateAndStoreCommand, store bool) error {
@@ -76,7 +74,7 @@ func (c *CV) generateAndStoreCredhub(name string, v *GenerateAndStoreCommand, st
 	}
 
 	output.Status("NOW UPLOADING TO VENAFI '%s'\n", name)
-	err = c.vcert.putCertificate(name, certificate.Value.Certificate, certificate.Value.PrivateKey)
+	err = c.vcert.PutCertificate(name, certificate.Value.Certificate, certificate.Value.PrivateKey)
 	if err != nil {
 		return err
 	}
@@ -84,10 +82,24 @@ func (c *CV) generateAndStoreCredhub(name string, v *GenerateAndStoreCommand, st
 	return nil
 }
 
-func (c *CV) generateAndStore(name string, args *GenerateAndStoreCommand, store bool) error {
+func (c *CV) generateAndStore(name string, v *GenerateAndStoreCommand, store bool) error {
 	output.Status("NOW GENERATING ON VENAFI '%s'\n", name)
 	// we assume that login has already been done on credhub
-	cert, err := c.vcert.generate(args)
+	args := &vcclient.CertArgs{
+		Name:               v.Name,
+		CommonName:         v.CommonName,
+		OrganizationName:   v.OrganizationName,
+		SANDNS:             v.SANDNS,
+		KeyCurve:           v.KeyCurve,
+		OrganizationalUnit: v.OrganizationalUnit,
+		Country:            v.Country,
+		State:              v.State,
+		Locality:           v.Locality,
+		SANEmail:           v.SANEmail,
+		SANIP:              v.SANIP,
+		KeyPassword:        v.KeyPassword,
+	}
+	cert, err := c.vcert.Generate(args)
 	if err != nil {
 		return err
 	}
@@ -117,7 +129,7 @@ func (c *CV) deleteCert(name string) error {
 	tp2 := hex.EncodeToString(tp[:])
 
 	output.Status("NOW DELETING FROM VENAFI '%s'\n", name)
-	err = c.vcert.revoke(tp2)
+	err = c.vcert.Revoke(tp2)
 	if err != nil {
 		return err
 	}
@@ -129,7 +141,7 @@ func (c *CV) deleteCert(name string) error {
 func (c *CV) listBoth(args *ListCommand) ([]CertCompareData, error) {
 	output.Status("LISTING...\n")
 
-	certInfo, err := c.vcert.list(args.VenafiLimit, args.VenafiRoot)
+	certInfo, err := c.vcert.List(args.VenafiLimit, args.VenafiRoot)
 	if err != nil {
 		return []CertCompareData{}, err
 	}
@@ -183,15 +195,6 @@ func printCerts(data []CertCompareData) {
 	for i, d := range data {
 		output.Verbose("%d %+v\n", i, d)
 	}
-}
-
-func jsonMarshallToFile(data interface{}, filename string) error {
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(filename, bytes, 0644)
 }
 
 // ComparisonStrategy defines the interface for comparing credentials
@@ -399,7 +402,6 @@ func (t *CommonNameStrategy) values(l *certificate.CertificateInfo, r *credentia
 // ThumbprintStrategy handles cert thumbprints
 type ThumbprintStrategy struct {
 	leftPrefix      string
-	rightPrefix     string
 	getCertificate  func(name string) (credentials.Certificate, error)
 	thumbprintCache map[string]string
 	errors          []error
@@ -572,18 +574,6 @@ type postSort interface {
 
 type processErrors interface {
 	getErrors() []error
-}
-
-func prependPolicyRoot(zone string) string {
-	zone = strings.TrimPrefix(zone, "\\")
-	zone = strings.TrimPrefix(zone, "Policy\\")
-	return prependVEDRoot("\\Policy\\" + zone)
-}
-
-func prependVEDRoot(zone string) string {
-	zone = strings.TrimPrefix(zone, "\\")
-	zone = strings.TrimPrefix(zone, "VED\\")
-	return "\\VED\\" + zone
 }
 
 // TPPGeneratedNameRegex specifies valid cert names
