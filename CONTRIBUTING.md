@@ -55,10 +55,19 @@ The following command will execute the unit tests.
 > Executing unit tests with Go's testing package
 
 ```sh
-go test -v
+go test -v ./...
 ```
 
 The json files under [testdata](testdata) contain supporting json files for testing.
+
+### Continuously Integrating and Continuously Deploying
+GitHub Actions are used to provide continuous integration and continuous deployment functionality for this app.
+
+The workflows are configured at .github/workflows/
+
+Linting, static analysis via [Staticcheck][staticcheck], and unit tests will be executed for each commit to a branch as well as all pull requests.
+
+If a commit to the master branch has a tag starting with a v, then the job will attempt to build the app and deploy it as a [release][release].
 
 <!-- Markdown links and image definitions -->
 [credhub]: https://docs.cloudfoundry.org/credhub/
@@ -66,5 +75,7 @@ The json files under [testdata](testdata) contain supporting json files for test
 [github-issue-tracker]: https://github.com/newcontext-oss/credhub-venafi/issues
 [go]: https://golang.org/
 [gotest]: https://golang.org/pkg/testing
+[release]: https://github.com/newcontext-oss/credhub-venafi/releases
+[staticcheck]: https://staticcheck.io/
 [testdata]: https://github.com/newcontext-oss/credhub-venafi/tree/master/testdata
 [venafi]: https://venafi.com
