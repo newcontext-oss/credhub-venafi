@@ -243,6 +243,10 @@ func (v *GenerateAndStoreCommand) validateFlags() error {
 	if v.CommonName == "" && len(v.SANDNS) == 0 {
 		return errors.New("you must have a common name or san-dns")
 	}
+	re := regexp.MustCompile(`[^\w_\-\/]`)
+	if re.MatchString(v.Name) {
+		return errors.New("CredHub name can only contain alphanumeric characters plus forward slash, underscore and dash")
+	}
 	return nil
 }
 
