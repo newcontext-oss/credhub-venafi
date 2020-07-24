@@ -250,12 +250,12 @@ func (c CertCompareData) String() string {
 	if c.Left != nil {
 		out += fmt.Sprintf(" Left:%+v ", *c.Left)
 	} else {
-		out += fmt.Sprint(" Left: nil ")
+		out += " Left: nil "
 	}
 	if c.Right != nil {
 		out += fmt.Sprintf(" Right:%+v ", *c.Right)
 	} else {
-		out += fmt.Sprint(" Right: nil ")
+		out += " Right: nil "
 	}
 	return out
 }
