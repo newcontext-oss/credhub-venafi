@@ -245,7 +245,7 @@ func (v *GenerateAndStoreCommand) validateFlags() error {
 	}
 	re := regexp.MustCompile(`[^\w_\-\/]`)
 	if re.MatchString(v.Name) {
-		return errors.New("CredHub name can only contain alphanumeric characters plus forward slash, dot and dash")
+		return errors.New("CredHub name can only contain alphanumeric characters plus forward slash, underscore and dash")
 	}
 	return nil
 }
