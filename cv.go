@@ -79,6 +79,11 @@ func (c *CV) generateAndStoreCredhub(name string, v *GenerateAndStoreCommand, st
 		return err
 	}
 
+	err = c.vcert.Logout()
+	if err != nil {
+		output.Errorf("error with cleanup. %s\n", err)
+	}
+
 	return nil
 }
 
@@ -108,6 +113,11 @@ func (c *CV) generateAndStore(name string, v *GenerateAndStoreCommand, store boo
 		return nil
 	}
 
+	err = c.vcert.Logout()
+	if err != nil {
+		output.Errorf("error with cleanup. %s\n", err)
+	}
+
 	output.Status("NOW UPLOADING TO CREDHUB '%s'\n", name)
 	certName := name
 	ca := ""
@@ -132,6 +142,11 @@ func (c *CV) deleteCert(name string) error {
 	err = c.vcert.Revoke(tp2)
 	if err != nil {
 		return err
+	}
+
+	err = c.vcert.Logout()
+	if err != nil {
+		output.Errorf("error with cleanup. %s\n", err)
 	}
 
 	output.Status("NOW DELETING FROM CREDHUB '%s'\n", name)
@@ -177,6 +192,11 @@ func (c *CV) listBoth(args *ListCommand) ([]CertCompareData, error) {
 	}
 	if len(certInfo) == args.VenafiLimit {
 		output.Errorf("The Venafi limit was hit, consider increasing -vlimit to increase the number of allowed records.\n")
+	}
+
+	err = c.vcert.Logout()
+	if err != nil {
+		output.Errorf("error with cleanup. %s\n", err)
 	}
 
 	return data, nil

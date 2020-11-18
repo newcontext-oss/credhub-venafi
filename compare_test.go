@@ -467,6 +467,9 @@ func (v *VcertProxyMock) PutCertificate(certName string, cert string, privateKey
 func (v *VcertProxyMock) Login() error {
 	return nil
 }
+func (v *VcertProxyMock) Logout() error {
+	return nil
+}
 
 func TestCVListBoth(t *testing.T) {
 	tests := []struct {

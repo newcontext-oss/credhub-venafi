@@ -17,6 +17,8 @@ package vcclient
 import (
 	"encoding/pem"
 	"fmt"
+	"github.com/Venafi/vcert/pkg/venafi/tpp"
+	"net/http"
 	"strings"
 	"time"
 
@@ -26,12 +28,15 @@ import (
 	"github.com/newcontext-oss/credhub-venafi/output"
 )
 
+var CreatedAccessToken = false
+
 // IVcertProxy defines the interface for proxies that manage requests to vcert
 type IVcertProxy interface {
 	PutCertificate(certName string, cert string, privateKey string) error
 	List(vlimit int, zone string) ([]certificate.CertificateInfo, error)
 	RetrieveCertificateByThumbprint(thumprint string) (*certificate.PEMCollection, error)
 	Login() error
+	Logout() error
 	Revoke(thumbprint string) error
 	Generate(args *CertArgs) (*certificate.PEMCollection, error)
 }
@@ -41,6 +46,8 @@ type VcertProxy struct {
 	Username      string
 	Password      string
 	Zone          string
+	AccessToken   string
+	LegacyAuth    bool
 	Client        endpoint.Connector
 	BaseURL       string
 	ConnectorType string
@@ -94,24 +101,54 @@ func (v *VcertProxy) RetrieveCertificateByThumbprint(thumprint string) (*certifi
 
 // Login creates a session with the TPP server
 func (v *VcertProxy) Login() error {
-	auth := endpoint.Authentication{
-		User:     v.Username,
-		Password: v.Password,
-	}
 	var connectorType endpoint.ConnectorType
+	auth := endpoint.Authentication{}
 
 	switch v.ConnectorType {
 	case "tpp":
 		connectorType = endpoint.ConnectorTypeTPP
+
+		if v.AccessToken != "" {
+			auth = endpoint.Authentication{
+				AccessToken: v.AccessToken,
+			}
+			output.Info("config access token\n")
+		} else if v.LegacyAuth {
+			output.Print("DEPRECATED: Authorizing with APIKey. Please update your TPP server.\n")
+			auth = endpoint.Authentication{
+				User:     v.Username,
+				Password: v.Password,
+			}
+		} else {
+			connector, err := tpp.NewConnector(v.BaseURL, v.Zone, false, nil)
+			if err != nil {
+				return fmt.Errorf("could not create tpp client: %s", err)
+			}
+
+			resp, err := connector.GetRefreshToken(&endpoint.Authentication{
+				User: v.Username, Password: v.Password, ClientId: "vault-venafi",
+				Scope: "certificate:manage,delete,discover"})
+			if err != nil {
+				return fmt.Errorf("could not fetch access token. Enable legacy auth support: %s", err)
+			}
+			CreatedAccessToken = true
+			v.AccessToken = resp.Access_token
+			auth = endpoint.Authentication{
+				AccessToken: resp.Access_token,
+			}
+			output.Info("vcert created access token\n")
+		}
 	default:
 		return fmt.Errorf("connector type '%s' not found", v.ConnectorType)
 	}
+
 	conf := vcert.Config{
 		Credentials:   &auth,
 		BaseUrl:       v.BaseURL,
 		Zone:          v.Zone,
 		ConnectorType: connectorType,
 	}
+
 	c, err := vcert.NewClient(&conf)
 	if err != nil {
 		return fmt.Errorf("could not connect to endpoint: %s", err)
@@ -172,4 +209,27 @@ func prependVEDRoot(zone string) string {
 	zone = strings.TrimPrefix(zone, "\\")
 	zone = strings.TrimPrefix(zone, "VED\\")
 	return "\\VED\\" + zone
+}
+
+// logout revokes a access token in tpp (delete is not available via the tpp client library)
+func (p *VcertProxy) Logout() error {
+	if CreatedAccessToken == true {
+		var bearer = "Bearer " + p.AccessToken
+		req, err := http.NewRequest("GET", p.BaseURL+"/vedauth/revoke/token", nil)
+		if err != nil {
+			return fmt.Errorf("could not connect to access token endpoint: %s", err)
+		}
+		req.Header.Set("Authorization", bearer)
+
+		// Send req using http Client
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return fmt.Errorf("could not connect to access token endpoint endpoint: %s", err)
+		}
+
+		defer resp.Body.Close()
+		output.Info("vcert revoking created access token")
+	}
+	return nil
 }
