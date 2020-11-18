@@ -80,6 +80,7 @@ log_level: status
 ```
 Where:
 vcert_username/vcert_password: will be credentials of the user to log into Venafi TPP
+vcert_legacy_auth: if true then API-key authentication will be used (pre TPP v19.2)
 vcert_zone: policy path in Venafi TPP to store certificates, this path MUST pre-created
 vcert_base_url: the URL to Venafi TPP
 vcert_access_token: bearer token obtained from Venafi TPP, used for token-based authentication in v19.2+ (optional)
