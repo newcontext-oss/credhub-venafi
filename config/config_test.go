@@ -26,17 +26,19 @@ var dataDir string = "../testdata/config"
 
 func TestReadConfigWithValidFile(t *testing.T) {
 	desired := &config.YAMLConfig{
-		VcertUsername:   "test",
-		VcertPassword:   "test",
-		VcertZone:       "some_zone",
-		VcertBaseURL:    "some_url",
-		ConnectorType:   "tpp",
-		ClientID:        "some_id",
-		ClientSecret:    "some_secret",
-		CredhubUsername: "test2",
-		CredhubPassword: "test2",
-		CredhubEndpoint: "some_other_url",
-		LogLevel:        "info",
+		VcertUsername:    "test",
+		VcertPassword:    "test",
+		VcertZone:        "some_zone",
+		VcertBaseURL:     "some_url",
+		VcertAccessToken: "access_token",
+		VcertLegacyAuth:  false,
+		ConnectorType:    "tpp",
+		ClientID:         "some_id",
+		ClientSecret:     "some_secret",
+		CredhubUsername:  "test2",
+		CredhubPassword:  "test2",
+		CredhubEndpoint:  "some_other_url",
+		LogLevel:         "info",
 	}
 	actual, err := config.ReadConfig(dataDir, "test_config.yml")
 	if err != nil {

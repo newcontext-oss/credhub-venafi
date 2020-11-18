@@ -47,17 +47,19 @@ var Quiet bool = false
 
 // YAMLConfig contains the configuration values and yaml tags for the config file
 type YAMLConfig struct {
-	VcertUsername   string `yaml:"vcert_username"`
-	VcertPassword   string `yaml:"vcert_password"`
-	VcertZone       string `yaml:"vcert_zone"`
-	VcertBaseURL    string `yaml:"vcert_base_url"`
-	ConnectorType   string `yaml:"connector_type"`
-	ClientID        string `yaml:"credhub_client_id"`
-	ClientSecret    string `yaml:"credhub_client_secret"`
-	CredhubUsername string `yaml:"credhub_username"`
-	CredhubPassword string `yaml:"credhub_password"`
-	CredhubEndpoint string `yaml:"credhub_endpoint"`
-	LogLevel        string `yaml:"log_level"`
+	VcertUsername    string `yaml:"vcert_username"`
+	VcertPassword    string `yaml:"vcert_password"`
+	VcertZone        string `yaml:"vcert_zone"`
+	VcertAccessToken string `yaml:"vcert_access_token"`
+	VcertLegacyAuth  bool   `yaml:"vcert_legacy_auth"`
+	VcertBaseURL     string `yaml:"vcert_base_url"`
+	ConnectorType    string `yaml:"connector_type"`
+	ClientID         string `yaml:"credhub_client_id"`
+	ClientSecret     string `yaml:"credhub_client_secret"`
+	CredhubUsername  string `yaml:"credhub_username"`
+	CredhubPassword  string `yaml:"credhub_password"`
+	CredhubEndpoint  string `yaml:"credhub_endpoint"`
+	LogLevel         string `yaml:"log_level"`
 
 	SkipTLSValidation bool `yaml:"skip_tls_validation"`
 }

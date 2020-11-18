@@ -23,9 +23,35 @@ CV logs in the User Account and Authentication (UAA) Server by first contacting 
 ### Config File
 The config file is read from the  `.cv.conf` in the $HOME directory.
 
+### Venafi Cloud
+```
+apikey: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+zone: zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz
+connector_type: cloud
+credhub_username: credhub
+credhub_password: topsecret
+credhub_endpoint: https://127.0.0.1:9000
+skip_tls_validation: true
+log_level: status
+```
+### Venafi Platform
 ```
 vcert_username: tppadmin
 vcert_password: topsecret
+vcert_zone: \Certificates
+vcert_base_url: https://yourvenafiinstall.com/vedsdk/
+vcert_access_token: WkDQ/zJsFOXzLEWQQ51mlw== (optional)
+connector_type: tpp
+credhub_username: credhub
+credhub_password: topsecret
+credhub_endpoint: https://127.0.0.1:9000
+skip_tls_validation: true
+log_level: status
+```
+
+##### Direct Access Token Support
+```
+vcert_access_token: WkDQ/zJsFOXzLEWQQ51mlw== (bearer access token)
 vcert_zone: \Certificates
 vcert_base_url: https://yourvenafiinstall.com/vedsdk/
 connector_type: tpp
@@ -35,6 +61,42 @@ credhub_endpoint: https://127.0.0.1:9000
 skip_tls_validation: true
 log_level: status
 ```
+##### Legacy APIKey Support
+
+```
+vcert_username: tppadmin
+vcert_password: topsecret
+vcert_legacy_auth: true
+vcert_zone: \Certificates
+vcert_base_url: https://yourvenafiinstall.com/vedsdk/
+connector_type: tpp
+credhub_username: credhub
+credhub_password: topsecret
+credhub_endpoint: https://127.0.0.1:9000
+skip_tls_validation: true
+log_level: status
+```
+
+```
+Where:
+vcert_username/vcert_password: will be credentials of the user to log into Venafi TPP
+vcert_legacy_auth: if true then API-key authentication will be used (pre TPP v19.2)
+vcert_zone: policy path in Venafi TPP to store certificates, this path MUST pre-created
+vcert_base_url: the URL to Venafi TPP
+vcert_access_token: bearer token obtained from Venafi TPP, used for token-based authentication in v19.2+ (optional)
+connector_type: Venafi tpp or cloud
+vault_token: access token to be used for Vault
+vault_base_url: the URL to the Vault instance
+vault_kv_path: the path in Vault where the key-value pair Venafi certificates are stored
+vault_pki_path: the path in Vault where the Vault certificates are stored
+vault_role: the role to use in Vault when creating certificates
+Log_level: STATUS, VERBOSE, INFO or ERROR
+skip_tls_validation: true (when using self-signed certificates)
+```
+
+**NOTE**: The vcert_access_token is optional as the Vault-Venafi tool will obtain a token on the fly for the username if one is not specified.
+
+Previous to Venafi Trust Protection Platform (TPP) v19.2 all authentication was handled via username/password with an API-Key. With TPP v19.2 token-based authentication was introduced and Venafi plans to deprecate the API-Key authentication method at the end of 2020. TPP v20.4 will be the last release that supports API-Key authentication.
 
 ### CredHub Login Example
 
@@ -81,6 +143,11 @@ Create a certificate on the Credhub and upload to Venafi
 
 Uses -credhub flag.
 
+**Note:** The above command requires the certifate authority to preexist. For simple testing purposes you can replace the -ca option with the -self-sign option.
+
+```
+./cv create -credhub -name mycredname29 -cn mycredname29 -key-usage data_encipherment -self-sign
+```
 
 ### CV Create Help Usage</h2>
 Adding the `-h` flag to command reveals the help associated with that command.
