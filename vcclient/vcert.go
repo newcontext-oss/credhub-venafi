@@ -63,6 +63,13 @@ func (v *VcertProxy) PutCertificate(certName string, cert string, privateKey str
 		PrivateKeyData:  privateKey,
 		// Password:        "newPassw0rd!",
 		Reconcile: false,
+		CustomFields: []certificate.CustomField{
+			{
+				Type:  certificate.CustomFieldOrigin,
+				Name:  "Origin",
+				Value: origin,
+			},
+		},
 	}
 
 	importResp, err := v.Client.ImportCertificate(importReq)
