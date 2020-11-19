@@ -28,6 +28,7 @@ import (
 	"github.com/newcontext-oss/credhub-venafi/output"
 )
 
+var origin = "NewContext Credhub-Venafi"
 var CreatedAccessToken = false
 
 // IVcertProxy defines the interface for proxies that manage requests to vcert
@@ -62,6 +63,13 @@ func (v *VcertProxy) PutCertificate(certName string, cert string, privateKey str
 		PrivateKeyData:  privateKey,
 		// Password:        "newPassw0rd!",
 		Reconcile: false,
+		CustomFields: []certificate.CustomField{
+			{
+				Type:  certificate.CustomFieldOrigin,
+				Name:  "Origin",
+				Value: origin,
+			},
+		},
 	}
 
 	importResp, err := v.Client.ImportCertificate(importReq)

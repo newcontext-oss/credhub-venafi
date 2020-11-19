@@ -34,6 +34,7 @@ type CertArgs struct {
 	SANDNS             []string
 	KeyCurve           certificate.EllipticCurve
 	OrganizationalUnit []string
+	Origin             string
 	Country            string
 	State              string
 	Locality           string
@@ -104,5 +105,12 @@ func buildGenerateRequest(v *CertArgs) (*certificate.Request, error) {
 		r.KeyPassword = v.KeyPassword
 	}
 	r.Subject = subject
+
+	r.CustomFields = append(r.CustomFields, certificate.CustomField{
+		Type:  certificate.CustomFieldOrigin,
+		Name:  "Origin",
+		Value: origin,
+	})
+
 	return r, nil
 }
