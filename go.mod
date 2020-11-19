@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	code.cloudfoundry.org/credhub-cli v0.0.0-20191230184144-6e537b521d9d
-	github.com/Venafi/vcert v0.0.0-20200110160249-46ed6e7db59c
+	github.com/Venafi/vcert v0.0.0-20200421144231-dd32326727e2
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 // indirect

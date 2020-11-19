@@ -28,6 +28,7 @@ import (
 	"github.com/newcontext-oss/credhub-venafi/output"
 )
 
+var origin = "NewContext Credhub-Venafi"
 var CreatedAccessToken = false
 
 // IVcertProxy defines the interface for proxies that manage requests to vcert
