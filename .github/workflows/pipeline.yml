@@ -15,10 +15,8 @@ jobs:
 
       - name: Download dependencies
         run: |
-          # add executables installed with go get to PATH
-          # TODO: this will hopefully be fixed by
-          # https://github.com/actions/setup-go/issues/14
-          export PATH=${PATH}:`go env GOPATH`/bin
+          go install golang.org/x/lint/golint@latest
+          export PATH=$PATH:$(go env GOPATH)/bin
 
       - name: Build
         env:
